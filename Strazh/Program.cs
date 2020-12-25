@@ -12,15 +12,22 @@ namespace Strazh
     {
         static async Task Main(string[] args)
         {
-            var manager = new AnalyzerManager();
-            var analyzer = manager.GetProject(@"/Users/vladbatushkov/Documents/src/github/strazh/Fakelib/Fakelib.csproj");
-            var workspace = new AdhocWorkspace();
-            var roslynProject = analyzer.AddToWorkspace(workspace);
-            var compilation = await roslynProject.GetCompilationAsync();
-            foreach (var st in compilation.SyntaxTrees)
+            try
             {
-                var sem = compilation.GetSemanticModel(st);
-                AnalyzeTree<ClassDeclarationSyntax>(st, sem, (n) => Console.WriteLine(n));
+                var manager = new AnalyzerManager();
+                var analyzer = manager.GetProject(args[0]);
+                var workspace = new AdhocWorkspace();
+                var roslynProject = analyzer.AddToWorkspace(workspace);
+                var compilation = await roslynProject.GetCompilationAsync();
+                foreach (var st in compilation.SyntaxTrees)
+                {
+                    var sem = compilation.GetSemanticModel(st);
+                    AnalyzeTree<ClassDeclarationSyntax>(st, sem, (n) => Console.WriteLine(n));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
