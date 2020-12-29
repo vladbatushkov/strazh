@@ -8,7 +8,8 @@
   <ItemGroup>
     <PackageReference Include="Buildalyzer" Version="3.1.0" />
     <PackageReference Include="Buildalyzer.Workspaces" Version="3.1.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.7.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Csharp" Version="3.8.0" />
   </ItemGroup>
 
 </Project>
