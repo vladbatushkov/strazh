@@ -3,7 +3,7 @@ Your code - is your Knowledge Graph
 
 ### docker
 
-Dockerfile:
+**Dockerfile**
 ```
 FROM mcr.microsoft.com/dotnet/sdk:3.1
 WORKDIR /src
@@ -20,7 +20,40 @@ Create `strazh:dev` image:
 
 Run `strazh:dev` container against the `Strazh` project (strazh can explore self codebase, why not):
 
-`docker run -it --rm -v $(pwd)/Strazh:/dest -e path=/dest/Strazh.csproj strazh:dev`
+`docker run -it --rm --network=host -v $(pwd)/Strazh:/dest -e path=/dest/Strazh.csproj strazh:dev`
 
 _-- `docker volume` point to `Strazh` folder with `Strazh.csproj` in it._
 _-- `path` environment used to point to project path inside docker container._
+
+**docker-compose.yml**
+```
+version: '3'
+services:
+
+  strazh:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: strazh:dev
+    container_name: strazh_dev
+    network_mode: host
+    volumes:
+      - ./Strazh:/dest
+    environment:
+      - path=/dest/Strazh.csproj
+    depends_on:
+      - neo4j
+
+  neo4j:
+    image: neo4j:4.2
+    container_name: strazh_neo4j_dev
+    restart: unless-stopped
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      NEO4J_AUTH: neo4j/strazh
+      NEO4J_dbms_memory_pagecache_size: 1G
+      NEO4J_dbms.memory.heap.initial_size: 1G
+      NEO4J_dbms_memory_heap_max__size: 1G
+``` 
