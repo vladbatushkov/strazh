@@ -6,6 +6,7 @@ using Strazh.Domain;
 using Buildalyzer;
 using Buildalyzer.Workspaces;
 using System.Collections.Generic;
+using System;
 
 namespace Strazh.Analysis
 {
@@ -26,6 +27,7 @@ namespace Strazh.Analysis
                 triples.AddRange(Extractor.AnalyzeTree<ClassDeclarationSyntax>(st, sem).SelectMany(x => x));
                 triples.AddRange(Extractor.AnalyzeTree<InterfaceDeclarationSyntax>(st, sem).SelectMany(x => x));
             }
+            Console.WriteLine("Codebase analyzed.");
             return triples.GroupBy(x => x.ToString()).Select(x => x.First());
         }
     }

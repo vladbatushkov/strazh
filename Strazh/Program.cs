@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Strazh.Analysis;
+using Strazh.Database;
 
 namespace Strazh
 {
@@ -17,11 +17,10 @@ namespace Strazh
                     Console.WriteLine("Strazh disappointed. There is no Neo4j instance ready to use.");
                     return;
                 }
-                var items = await Analyzer.Analyze(args[0]);
-                foreach (var item in items)
-                {
-                    Console.WriteLine(item.ToString());
-                }
+                Console.WriteLine("Brewing the Knowledge Graph...");
+                var triples = await Analyzer.Analyze(args[0]);
+                await DbManager.InsertData(triples);
+                Console.WriteLine("Enjoy the Knowledge Graph of your codebase!");
             }
             catch (Exception ex)
             {

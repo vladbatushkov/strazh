@@ -35,7 +35,7 @@ namespace Strazh
             }
             catch
             {
-                return HttpStatusCode.InternalServerError;
+                return HttpStatusCode.NotFound;
             }
         }
     }
