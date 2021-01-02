@@ -20,7 +20,7 @@ ENV path=default
 CMD ["sh", "-c", "dotnet Strazh.dll $path"]
 ```
 
-Create `strazh:dev` image:
+Create local `strazh:dev` image:
 
 `docker build . -t strazh:dev`
 
@@ -37,11 +37,8 @@ version: '3'
 services:
 
   strazh:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    image: strazh:dev
-    container_name: strazh_dev
+    image: vladbatushkov/strazh:1.0.0-alpha
+    container_name: strazh
     network_mode: host
     volumes:
       - ./Strazh:/dest
@@ -52,7 +49,7 @@ services:
 
   neo4j:
     image: neo4j:4.2
-    container_name: strazh_neo4j_dev
+    container_name: strazh_neo4j
     restart: unless-stopped
     ports:
       - 7474:7474
