@@ -11,39 +11,46 @@ Release:
 
 **Dockerfile**
 ```
-FROM mcr.microsoft.com/dotnet/sdk:3.1
+FROM mcr.microsoft.com/dotnet/sdk:3.1 AS sdk
 WORKDIR /src
-COPY Strazh Strazh
+COPY Strazh Strazh/
 RUN dotnet build /src/Strazh/Strazh.csproj -c Release -o /app
 WORKDIR /app
-ENV path=default
-CMD ["sh", "-c", "dotnet Strazh.dll $path"]
+ENV path=Project.csproj
+ENV cred=neo4j:neo4j:test
+CMD ["sh", "-c", "dotnet Strazh.dll -p $path -c $cred"]
 ```
 
-Create local `strazh:dev` image:
+In case you want to create a local `strazh:dev` image:
 
 `docker build . -t strazh:dev`
 
-Run `strazh:dev` container against the `Strazh` project (strazh can explore self codebase, why not):
+Example how to run created `strazh:dev` container against the `Strazh.csproj` project (strazh can explore strazh codebase O_o )
 
-`docker run -it --rm --network=host -v $(pwd)/Strazh:/dest -e path=/dest/Strazh.csproj strazh:dev`
+`docker run -it --rm --network=host -v $(pwd)/Strazh:/dest -e path=/dest/Strazh.csproj -e cred=neo4j:neo4j:test strazh:dev`
 
-_-- `docker volume` point to `Strazh` folder with `Strazh.csproj` in it._
+_-- `docker volume` point to `Strazh` folder with `Strazh.csproj` and all the code inside._
 _-- `path` environment used to point to project path inside docker container._
+_-- `cred` environment used to connect to Neo4j with `database:user:password` credentials._
 
 **docker-compose.yml**
+
+Another one option to build and run all together.
+
 ```
 version: '3'
 services:
 
   strazh:
-    image: vladbatushkov/strazh:1.0.0-alpha
+    build: .
+    image: vladbatushkov/strazh:1.0.0-alpha.1
     container_name: strazh
     network_mode: host
     volumes:
       - ./Strazh:/dest
     environment:
       - path=/dest/Strazh.csproj
+      - cred=neo4j:neo4j:strazh
     depends_on:
       - neo4j
 
@@ -59,4 +66,5 @@ services:
       NEO4J_dbms_memory_pagecache_size: 1G
       NEO4J_dbms.memory.heap.initial_size: 1G
       NEO4J_dbms_memory_heap_max__size: 1G
+
 ``` 
