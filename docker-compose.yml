@@ -2,13 +2,15 @@ version: '3'
 services:
 
   strazh:
-    image: vladbatushkov/strazh:1.0.0-alpha
+    build: .
+    image: vladbatushkov/strazh:1.0.0-alpha.1
     container_name: strazh
     network_mode: host
     volumes:
       - ./Strazh:/dest
     environment:
       - path=/dest/Strazh.csproj
+      - cred=neo4j:neo4j:strazh
     depends_on:
       - neo4j
 
