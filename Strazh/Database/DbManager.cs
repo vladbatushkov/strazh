@@ -10,18 +10,29 @@ namespace Strazh.Database
     {
         private const string DBNAME = "neo4j";
         private const string USER = "neo4j";
-        private const string PASSWORD = "strazh";
+        private const string PASSWORD = "test";
         private const string CONNECTION = "neo4j://localhost:7687";
 
-        public static async Task InsertData(IEnumerable<Triple> triples, bool isOverride = true)
+        public static async Task InsertData(IEnumerable<Triple> triples, string credentials = null, bool isOverride = true)
         {
-            var driver = GraphDatabase.Driver(CONNECTION, AuthTokens.Basic(USER, PASSWORD));
-            var session = driver.AsyncSession(o => o.WithDatabase(DBNAME));
+            var cred = new[] { DBNAME, USER, PASSWORD };
+            if (!string.IsNullOrEmpty(credentials))
+            {
+                var args = credentials.Split(":");
+                if (args.Length == 3)
+                {
+                    cred = args;
+                }
+            }
+            Console.WriteLine($"Connecting to Neo4j database={cred[0]}, user={cred[1]}, password={cred[2]}");
+            var driver = GraphDatabase.Driver(CONNECTION, AuthTokens.Basic(cred[1], cred[2]));
+            var session = driver.AsyncSession(o => o.WithDatabase(cred[0]));
             try
             {
                 if (isOverride)
                 {
                     await session.RunAsync("MATCH (n) DETACH DELETE n;");
+                    Console.WriteLine($"Database `{cred[0]}` is cleaned.");
                 }
                 foreach (var triple in triples)
                 {

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Version>1.0.0-alpha.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,7 +13,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Csharp" Version="3.8.0" />
     <PackageReference Include="Neo4j.Driver" Version="4.2.0" />
-    <PackageReference Include="Neo4j.Driver.Reactive" Version="4.2.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20574.7" />
   </ItemGroup>
 
 </Project>
