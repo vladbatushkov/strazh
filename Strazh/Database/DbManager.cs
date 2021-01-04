@@ -9,14 +9,23 @@ namespace Strazh.Database
     public static class DbManager
     {
         private const string DBNAME = "neo4j";
-        private const string USER = "neo4j";
+        private const string USER = "strazh";
         private const string PASSWORD = "strazh";
         private const string CONNECTION = "neo4j://localhost:7687";
 
-        public static async Task InsertData(IEnumerable<Triple> triples, bool isOverride = true)
+        public static async Task InsertData(IEnumerable<Triple> triples, string cred = null, bool isOverride = true)
         {
-            var driver = GraphDatabase.Driver(CONNECTION, AuthTokens.Basic(USER, PASSWORD));
-            var session = driver.AsyncSession(o => o.WithDatabase(DBNAME));
+            var creds = new[] { DBNAME, USER, PASSWORD };
+            if (!string.IsNullOrEmpty(cred))
+            {
+                var args = cred.Split(":");
+                if (args.Length == 3)
+                {
+                    creds = args;
+                }
+            }
+            var driver = GraphDatabase.Driver(CONNECTION, AuthTokens.Basic(creds[1], creds[2]));
+            var session = driver.AsyncSession(o => o.WithDatabase(creds[0]));
             try
             {
                 if (isOverride)
