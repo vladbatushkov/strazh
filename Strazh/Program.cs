@@ -27,7 +27,7 @@ namespace Strazh
             await rootCommand.InvokeAsync(args);
         }
 
-        static async Task BuildKnowledgeGraph(string path, string cred)
+        static async Task BuildKnowledgeGraph(string path, string credentials)
         {
             try
             {
@@ -37,10 +37,9 @@ namespace Strazh
                     Console.WriteLine("Strazh disappointed. There is no Neo4j instance ready to use.");
                     return;
                 }
-                Console.WriteLine("Brewing the Knowledge Graph...");
+                Console.WriteLine("Brewing the Knowledge Graph.");
                 var triples = await Analyzer.Analyze(path);
-                await DbManager.InsertData(triples, cred);
-                Console.WriteLine("Enjoy the Knowledge Graph of your codebase!");
+                await DbManager.InsertData(triples, credentials);
             }
             catch (Exception ex)
             {

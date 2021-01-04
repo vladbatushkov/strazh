@@ -9,28 +9,30 @@ namespace Strazh.Database
     public static class DbManager
     {
         private const string DBNAME = "neo4j";
-        private const string USER = "strazh";
-        private const string PASSWORD = "strazh";
+        private const string USER = "neo4j";
+        private const string PASSWORD = "test";
         private const string CONNECTION = "neo4j://localhost:7687";
 
-        public static async Task InsertData(IEnumerable<Triple> triples, string cred = null, bool isOverride = true)
+        public static async Task InsertData(IEnumerable<Triple> triples, string credentials = null, bool isOverride = true)
         {
-            var creds = new[] { DBNAME, USER, PASSWORD };
-            if (!string.IsNullOrEmpty(cred))
+            var cred = new[] { DBNAME, USER, PASSWORD };
+            if (!string.IsNullOrEmpty(credentials))
             {
-                var args = cred.Split(":");
+                var args = credentials.Split(":");
                 if (args.Length == 3)
                 {
-                    creds = args;
+                    cred = args;
                 }
             }
-            var driver = GraphDatabase.Driver(CONNECTION, AuthTokens.Basic(creds[1], creds[2]));
-            var session = driver.AsyncSession(o => o.WithDatabase(creds[0]));
+            Console.WriteLine($"Connecting to Neo4j database={cred[0]}, user={cred[1]}, password={cred[2]}");
+            var driver = GraphDatabase.Driver(CONNECTION, AuthTokens.Basic(cred[1], cred[2]));
+            var session = driver.AsyncSession(o => o.WithDatabase(cred[0]));
             try
             {
                 if (isOverride)
                 {
                     await session.RunAsync("MATCH (n) DETACH DELETE n;");
+                    Console.WriteLine($"Database `{cred[0]}` is cleaned.");
                 }
                 foreach (var triple in triples)
                 {
