@@ -91,9 +91,9 @@ namespace Strazh.Domain
     public class TripleInherit : Triple
     {
         public TripleInherit(
-            Node classA,
+            Node nodeA,
             Node nodeB)
-            : base(classA, nodeB, new OfTypeRelationship())
+            : base(nodeA, nodeB, new OfTypeRelationship())
         { }
     }
 }

@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Linq;
 using System.Threading.Tasks;
 using Strazh.Analysis;
 using Strazh.Database;
+using Strazh.Domain;
 
 namespace Strazh
 {
@@ -18,16 +21,16 @@ namespace Strazh
             optionCred.IsRequired = true;
             rootCommand.Add(optionCred);
 
-            var optionPath = new Option<string>("--path", "absolute path to .csproj file");
+            var optionPath = new Option<string[]>("--pathlist", "list of absolute path to .csproj files");
             optionPath.AddAlias("-p");
             optionPath.IsRequired = true;
             rootCommand.Add(optionPath);
 
-            rootCommand.Handler = CommandHandler.Create<string, string>(BuildKnowledgeGraph);
+            rootCommand.Handler = CommandHandler.Create<string, string[]>(BuildKnowledgeGraph);
             await rootCommand.InvokeAsync(args);
         }
 
-        static async Task BuildKnowledgeGraph(string path, string credentials)
+        static async Task BuildKnowledgeGraph(string credentials, string[] pathlist)
         {
             try
             {
@@ -38,8 +41,13 @@ namespace Strazh
                     return;
                 }
                 Console.WriteLine("Brewing the Knowledge Graph.");
-                var triples = await Analyzer.Analyze(path);
-                await DbManager.InsertData(triples, credentials);
+                var isOverride = true;
+                foreach (var path in pathlist)
+                {
+                    var triples = await Analyzer.Analyze(path);
+                    await DbManager.InsertData(triples, credentials, isOverride);
+                    isOverride = false;
+                }
             }
             catch (Exception ex)
             {
