@@ -8,21 +8,27 @@ namespace Strazh.Database
 {
     public static class DbManager
     {
-        private const string DBNAME = "neo4j";
-        private const string USER = "neo4j";
-        private const string PASSWORD = "test";
         private const string CONNECTION = "neo4j://localhost:7687";
 
-        public static async Task InsertData(IEnumerable<Triple> triples, string credentials = null, bool isOverride = true)
+        private static string[] ParseCredentials(string credentials)
         {
-            var cred = new[] { DBNAME, USER, PASSWORD };
             if (!string.IsNullOrEmpty(credentials))
             {
                 var args = credentials.Split(":");
                 if (args.Length == 3)
                 {
-                    cred = args;
+                    return args;
                 }
+            }
+            return null;
+        }
+
+        public static async Task InsertData(IEnumerable<Triple> triples, string credentials, bool isOverride = true)
+        {
+            var cred = ParseCredentials(credentials);
+            if (cred == null)
+            {
+                throw new ArgumentException($"Please, provide credentials.");
             }
             Console.WriteLine($"Connecting to Neo4j database={cred[0]}, user={cred[1]}, password={cred[2]}");
             var driver = GraphDatabase.Driver(CONNECTION, AuthTokens.Basic(cred[1], cred[2]));
