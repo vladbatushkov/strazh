@@ -27,8 +27,9 @@ namespace Strazh.Analysis
                 triples.AddRange(Extractor.AnalyzeTree<ClassDeclarationSyntax>(st, sem).SelectMany(x => x));
                 triples.AddRange(Extractor.AnalyzeTree<InterfaceDeclarationSyntax>(st, sem).SelectMany(x => x));
             }
-            Console.WriteLine($"Codebase of {path} analyzed.");
-            return triples.GroupBy(x => x.ToString()).Select(x => x.First());
+            var result = triples.GroupBy(x => x.ToString()).Select(x => x.First());
+            Console.WriteLine($"Codebase of {path} analyzed with result of {result.Count()} triples.");
+            return result;
         }
     }
 }

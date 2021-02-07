@@ -8,7 +8,6 @@ services:
     network_mode: host
     volumes:
       - ./Strazh:/dest
-      - ../temp/test:/dest2
     environment:
       - cred=neo4j:neo4j:strazh
       - path=/dest/Strazh.csproj
