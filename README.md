@@ -36,9 +36,9 @@ WORKDIR /src
 COPY Strazh Strazh/
 RUN dotnet build /src/Strazh/Strazh.csproj -c Release -o /app
 WORKDIR /app
-ENV cred=none
-ENV path=None.csproj
-CMD ["sh", "-c", "dotnet Strazh.dll -c $cred -p $path"]
+ENV cs=neo4j:neo4j:neo4j
+ENV pl=Project.csproj
+CMD ["sh", "-c", "dotnet Strazh.dll --credentials $cs --pathlist $pl"]
 ```
 
 In case you want to create a local `strazh:dev` image:
@@ -47,11 +47,11 @@ In case you want to create a local `strazh:dev` image:
 
 Example how to run created `strazh:dev` container against the `Strazh.csproj` project (strazh can explore strazh codebase O_o )
 
-`docker run -it --rm --network=host -v $(pwd)/Strazh:/dest -e cred=neo4j:neo4j:strazh -e path=/dest/Strazh.csproj strazh:dev`
+`docker run -it --rm --network=host -v $(pwd)/Strazh:/dest -e cs=neo4j:neo4j:strazh -e pl=/dest/Strazh.csproj strazh:dev`
 
-_- `docker volume` point to `Strazh` folder with `Strazh.csproj` and all the code inside._
-_- `cred` environment used to connect to Neo4j with `database:user:password` credentials._
-_- `path` environment used to point to project path inside docker container._
+_- docker volume used to map folder `/Strazh` to folder `/dest` inside docker._
+_- environment value `cs` used to connect to Neo4j with `database:user:password` credentials._
+_- environment value `pl` used to point to list of project path inside docker container._
 
 **docker-compose.yml**
 
@@ -68,8 +68,8 @@ services:
     volumes:
       - ./Strazh:/dest
     environment:
-      - cred=neo4j:neo4j:strazh
-      - path=/dest/Strazh.csproj
+      - cs=neo4j:neo4j:strazh
+      - pl=/dest/Strazh.csproj
     depends_on:
       - neo4j
 

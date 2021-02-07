@@ -8,6 +8,6 @@ WORKDIR /src
 COPY Strazh Strazh/
 RUN dotnet build /src/Strazh/Strazh.csproj -c Release -o /app
 WORKDIR /app
-ENV cred=none
-ENV path=None.csproj
-CMD ["sh", "-c", "dotnet Strazh.dll -c $cred -p $path"]
+ENV cs=neo4j:neo4j:neo4j
+ENV pl=Project.csproj
+CMD ["sh", "-c", "dotnet Strazh.dll --credentials $cs --pathlist $pl"]

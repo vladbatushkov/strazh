@@ -17,12 +17,12 @@ namespace Strazh
             var rootCommand = new RootCommand();
 
             var optionCred = new Option<string>("--credentials", "credentials as `dbname:user:password` to connect to Neo4j batabase");
-            optionCred.AddAlias("-c");
+            optionCred.AddAlias("-cs);
             optionCred.IsRequired = true;
             rootCommand.Add(optionCred);
 
             var optionPath = new Option<string[]>("--pathlist", "list of absolute path to .csproj files");
-            optionPath.AddAlias("-p");
+            optionPath.AddAlias("-pl");
             optionPath.IsRequired = true;
             rootCommand.Add(optionPath);
 
