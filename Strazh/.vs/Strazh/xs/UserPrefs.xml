@@ -1,0 +1,32 @@
+﻿<Properties StartupConfiguration="{1C92D6A7-867F-42CC-933B-DB78249BA75B}|Default">
+  <MonoDevelop.Ide.ItemProperties.Strazh PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Program.cs">
+    <Files>
+      <File FileName="Program.cs" Line="51" Column="105" />
+      <File FileName="Analysis/Analyzer.cs" Line="30" Column="34" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="Strazh" expanded="True">
+            <Node name="Strazh" expanded="True">
+              <Node name="Dependencies" expanded="True" />
+              <Node name="Analysis" expanded="True" />
+              <Node name="Database" expanded="True" />
+              <Node name="Program.cs" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore>
+      <Breakpoint file="/Users/vladbatushkov/Documents/src/github/strazh/Strazh/Analysis/Analyzer.cs" relfile="Analysis/Analyzer.cs" line="32" column="1" />
+      <Breakpoint file="/Users/vladbatushkov/Documents/src/github/strazh/Strazh/Program.cs" relfile="Program.cs" line="52" column="1" />
+    </BreakpointStore>
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>

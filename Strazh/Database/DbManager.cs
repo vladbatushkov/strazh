@@ -45,7 +45,6 @@ namespace Strazh.Database
                     Console.WriteLine($"Executing command: {triple}");
                     await session.RunAsync(triple.ToString());
                 }
-                Console.WriteLine("Knowledge Graph created.");
             }
             catch (Exception ex)
             {
