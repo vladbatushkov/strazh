@@ -12,24 +12,22 @@ namespace Strazh.Analysis
 {
     public static class Analyzer
     {
-        private static IList<Triple> Triples;
-
         public static async Task<IEnumerable<Triple>> Analyze(string path)
         {
             var manager = new AnalyzerManager();
             var analyzer = manager.GetProject(path);
             var workspace = new AdhocWorkspace();
-            var roslynProject = analyzer.AddToWorkspace(workspace);
-            var compilation = await roslynProject.GetCompilationAsync();
+            var project = analyzer.AddToWorkspace(workspace);
+            var compilation = await project.GetCompilationAsync();
 
-            Triples = new List<Triple>();
+            var triples = new List<Triple>();
             foreach (var st in compilation.SyntaxTrees)
             {
                 var sem = compilation.GetSemanticModel(st);
-                Extractor.AnalyzeTree<ClassDeclarationSyntax>(Triples, st, sem);
-                Extractor.AnalyzeTree<InterfaceDeclarationSyntax>(Triples, st, sem);
+                Extractor.AnalyzeTree<ClassDeclarationSyntax>(triples, st, sem);
+                Extractor.AnalyzeTree<InterfaceDeclarationSyntax>(triples, st, sem);
             }
-            var result = Triples.GroupBy(x => x.ToString()).Select(x => x.First());
+            var result = triples.GroupBy(x => x.ToString()).Select(x => x.First());
             Console.WriteLine($"Codebase of {path} analyzed with result of {result.Count()} triples.");
             return result;
         }

@@ -51,7 +51,7 @@ Example how to run created `strazh:dev` container against the `Strazh.csproj` pr
 
 Run with cli from `Strazh` folder: `dotnet Strazh.dll -cs neo4j:neo4j:strazh -pl ../../../Strazh.csproj`
 
-Run using `dotnet run` from `Strazh` folder: `dotnet run -cs "neo4j:neo4j:strazh" -pl "../../graphville/src/Host/Graphville.csproj" "./Strazh.csproj" "../../temp/test/test.csproj"`
+Run using `dotnet run` from `Strazh` folder: `dotnet run -cs "neo4j:neo4j:strazh" -pl "../../temp/test/test.csproj" "./Strazh.csproj" "../../graphville/src/Host/Graphville.csproj"`
 
 _- docker volume used to map folder `/Strazh` to folder `/dest` inside docker._
 _- environment value `cs` used to connect to Neo4j with `database:user:password` credentials._

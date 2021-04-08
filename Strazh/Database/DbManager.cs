@@ -10,16 +10,6 @@ namespace Strazh.Database
     {
         private const string CONNECTION = "neo4j://localhost:7687";
 
-        static DbManager()
-        {
-#if DEBUG
-            // There is an issue with using Neo4j.Driver 4.2.0
-            // System.IO.FileNotFoundException: Could not load file or assembly '4.2.37.0'. The system cannot find the file specified.
-            // Workaround to load assembly and avoid issue 
-            System.Reflection.Assembly.Load("Neo4j.Driver");
-#endif
-        }
-
         private static string[] ParseCredentials(string credentials)
         {
             if (!string.IsNullOrEmpty(credentials))

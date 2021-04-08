@@ -7,10 +7,11 @@ services:
     container_name: strazh
     network_mode: host
     volumes:
-      - ./Strazh:/dest
+      - ../temp/test:/destTest
+      - ../graphville/src/Host:/destGraphville
     environment:
       - cs=neo4j:neo4j:strazh
-      - pl=/dest/Strazh.csproj
+      - pl=/destTest/test.csproj /destGraphville/Graphville.csproj
     depends_on:
       - neo4j
 

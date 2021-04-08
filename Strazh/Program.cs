@@ -10,8 +10,15 @@ namespace Strazh
 {
     public class Program
     {
+
         public static async Task Main(params string[] args)
         {
+#if DEBUG
+            // There is an issue with using Neo4j.Driver 4.2.0
+            // System.IO.FileNotFoundException: Could not load file or assembly '4.2.37.0'. The system cannot find the file specified.
+            // Workaround to load assembly and avoid issue 
+            System.Reflection.Assembly.Load("Neo4j.Driver");
+#endif
             var rootCommand = new RootCommand();
 
             var optionCred = new Option<string>("--credentials", "credentials as `dbname:user:password` to connect to Neo4j batabase");
