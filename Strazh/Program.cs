@@ -50,7 +50,7 @@ namespace Strazh
                 foreach (var path in pathlist)
                 {
                     var triples = await Analyzer.Analyze(path);
-                    if (triples.Count() > 0)
+                    if (triples.Length > 0)
                     {
                         await DbManager.InsertData(triples, credentials, isOverride);
                     }

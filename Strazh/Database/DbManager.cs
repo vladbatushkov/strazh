@@ -23,7 +23,7 @@ namespace Strazh.Database
             return null;
         }
 
-        public static async Task InsertData(IEnumerable<Triple> triples, string credentials, bool isOverride = true)
+        public static async Task InsertData(Triple[] triples, string credentials, bool isOverride = true)
         {
             var cred = ParseCredentials(credentials);
             if (cred == null)
@@ -38,13 +38,14 @@ namespace Strazh.Database
                 if (isOverride)
                 {
                     await session.RunAsync("MATCH (n) DETACH DELETE n;");
-                    Console.WriteLine($"Database `{cred[0]}` is cleaned.");
+                    Console.WriteLine($"Database \"{cred[0]}\" is cleaned.");
                 }
                 foreach (var triple in triples)
                 {
-                    Console.WriteLine($"Executing command: {triple}");
+                    //Console.WriteLine($"Executing command: {triple}");
                     await session.RunAsync(triple.ToString());
                 }
+                Console.WriteLine($"Merged {triples.Length} triples.");
             }
             catch (Exception ex)
             {

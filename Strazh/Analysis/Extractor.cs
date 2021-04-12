@@ -15,7 +15,7 @@ namespace Strazh.Analysis
             switch (declaration)
             {
                 case ClassDeclarationSyntax _:
-                    return new ClassNode(raw.fullName, raw.name);
+                    return new ClassNode(raw.fullName, raw.name, symbol.IsStatic);
                 case InterfaceDeclarationSyntax _:
                     return new InterfaceNode(raw.fullName, raw.name);
             }
@@ -23,7 +23,7 @@ namespace Strazh.Analysis
         }
 
         public static ClassNode CreateClassNode(this TypeInfo typeInfo)
-            => new ClassNode(GetFullName(typeInfo), GetName(typeInfo));
+            => new ClassNode(GetFullName(typeInfo), GetName(typeInfo), typeInfo.Type.IsStatic);
 
         public static InterfaceNode CreateInterfaceNode(this TypeInfo typeInfo)
             => new InterfaceNode(GetFullName(typeInfo), GetName(typeInfo));
@@ -52,7 +52,11 @@ namespace Strazh.Analysis
         public static MethodNode CreateMethodNode(this IMethodSymbol symbol)
         {
             var fullName = symbol.ContainingSymbol.ToString() + '.' + symbol.Name;
-            return new MethodNode(symbol.ChainKey(fullName), fullName, symbol.Name);
+            var args = symbol.Parameters.Select(x => {
+                var type = x.Type.ToString();
+                return (name: x.Name, type);
+            }).ToArray();
+            return new MethodNode(fullName, symbol.Name, args, "");
         }
 
         public static string[] ChainKey(this IMethodSymbol symbol, string str)

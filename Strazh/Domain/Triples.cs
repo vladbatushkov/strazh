@@ -19,14 +19,45 @@ namespace Strazh.Domain
             => $"MERGE (a:{NodeA.Label} {{ {NodeA.Match()} }}) ON CREATE SET {NodeA.Set("a")} MERGE (b:{NodeB.Label} {{ {NodeB.Match()} }}) ON CREATE SET {NodeB.Set("b")} MERGE (a)-[:{Relationship.Type}]->(b);";
     }
 
-    public class TripleDependsOn : Triple
+    // Structure
+
+    public class TripleDependsOnProject : Triple
     {
-        public TripleDependsOn(
-            ModuleNode methodA,
-            ModuleNode methodB)
-            : base(methodA, methodB, new DependsOnRelationship())
+        public TripleDependsOnProject(
+            ProjectNode projectA,
+            ProjectNode projectB)
+            : base(projectA, projectB, new DependsOnRelationship())
         { }
     }
+
+    public class TripleDependsOnPackage : Triple
+    {
+        public TripleDependsOnPackage(
+            ProjectNode projectA,
+            PackageNode packageB)
+            : base(projectA, packageB, new DependsOnRelationship())
+        { }
+    }
+
+    public class TripleIncludedIn : Triple
+    {
+        public TripleIncludedIn(
+            StructureNode contentA,
+            StructureNode contentB)
+            : base(contentA, contentB, new IncludedInRelationship())
+        { }
+    }
+
+    public class TripleDeclaredAt : Triple
+    {
+        public TripleDeclaredAt(
+            CodeNode codeA,
+            FileNode fileB)
+            : base(codeA, fileB, new DeclaredAtRelationship())
+        { }
+    }
+
+    // Code
 
     public class TripleInvoke : Triple
     {

@@ -43,15 +43,22 @@ CMD ["sh", "-c", "dotnet Strazh.dll --cs $cs --pl $pl"]
 
 In case you want to create a local `strazh:dev` image:
 
-`docker build . -t strazh:dev`
+```
+docker build . -t strazh:dev
+```
 
 Example how to run created `strazh:dev` container against the `Strazh.csproj` project (strazh can explore strazh codebase O_o )
 
-`docker run -it --rm --network=host -v $(pwd)/Strazh:/dest -e cs=neo4j:neo4j:strazh -e pl=/dest/Strazh.csproj strazh:dev`
+```
+docker run -it --rm --network=host -v $(pwd)/Strazh:/dest -e cs=neo4j:neo4j:strazh -e pl=/dest/Strazh.csproj strazh:dev
+```
 
 Run with cli from `Strazh` folder: `dotnet Strazh.dll -cs neo4j:neo4j:strazh -pl ../../../Strazh.csproj`
 
-Run using `dotnet run` from `Strazh` folder: `dotnet run -cs "neo4j:neo4j:strazh" -pl "../../temp/test/test.csproj" "./Strazh.csproj" "../../graphville/src/Host/Graphville.csproj"`
+Run using `dotnet run` from `Strazh` folder:
+```
+dotnet run -cs "neo4j:neo4j:strazh" -pl "./Strazh.csproj"
+```
 
 _- docker volume used to map folder `/Strazh` to folder `/dest` inside docker._
 _- environment value `cs` used to connect to Neo4j with `database:user:password` credentials._

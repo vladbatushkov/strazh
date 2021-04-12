@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Strazh": {
+      "commandName": "Project",
+      "commandLineArgs": "-cs \"neo4j:neo4j:strazh\" -pl \"\""
+    }
+  }
+}

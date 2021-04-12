@@ -7,16 +7,15 @@ services:
     container_name: strazh
     network_mode: host
     volumes:
-      - ../temp/test:/destTest
-      - ../graphville/src/Host:/destGraphville
+      - ./Strazh:/dest
     environment:
       - cs=neo4j:neo4j:strazh
-      - pl=/destTest/test.csproj /destGraphville/Graphville.csproj
+      - pl=/dest/Strazh.csproj
     depends_on:
       - neo4j
 
   neo4j:
-    image: neo4j:4.2
+    image: neo4j:4.2.0
     container_name: strazh_neo4j
     restart: unless-stopped
     ports:
