@@ -3,19 +3,19 @@ services:
 
   strazh:
     build: .
-    image: vladbatushkov/strazh:1.0.0-alpha.1
+    image: strazh:dev
     container_name: strazh
     network_mode: host
     volumes:
       - ./Strazh:/dest
     environment:
-      - path=/dest/Strazh.csproj
-      - cred=neo4j:neo4j:strazh
+      - cs=neo4j:neo4j:strazh
+      - pl=/dest/Strazh.csproj
     depends_on:
       - neo4j
 
   neo4j:
-    image: neo4j:4.2
+    image: neo4j:4.2.0
     container_name: strazh_neo4j
     restart: unless-stopped
     ports:

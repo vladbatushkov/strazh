@@ -1,72 +1,157 @@
-using System;
-using Microsoft.CodeAnalysis;
+using System.Linq;
 
 namespace Strazh.Domain
 {
     public class Node
     {
-        public virtual string Label { get; set; }
+        public virtual string Label { get; }
 
-        public virtual string FullName { get; set; }
+        public virtual string FullName { get; }
 
-        public virtual string Name { get; set; }
+        public virtual string Name { get; }
 
         /// <summary>
-        /// Primary Key
+        /// Primary Key used to compare Matching of nodes on MERGE operation
         /// </summary>
-        public virtual string Pk { get; private set; }
-
-        public Node(string[] str, string fullName, string name)
-        {
-            CreatePrimaryKey(string.Join(string.Empty, str));
-            FullName = fullName;
-            Name = name;
-        }
+        public virtual string Pk { get; protected set; }
 
         public Node(string fullName, string name)
         {
-            CreatePrimaryKey(fullName);
             FullName = fullName;
             Name = name;
+            SetPrimaryKey();
         }
 
-        private void CreatePrimaryKey(string pk)
+        protected virtual void SetPrimaryKey()
         {
-            Pk = pk.GetHashCode().ToString();
+            Pk = FullName.GetHashCode().ToString();
         }
 
         public string Match()
             => $"pk: \"{Pk}\"";
 
-        public string Set(string node)
+        public virtual string Set(string node)
             => $"{node}.pk = \"{Pk}\", {node}.fullName = \"{FullName}\", {node}.name = \"{Name}\"";
     }
 
-    public class ClassNode : Node
-    {
-        public ClassNode(string fullName, string name) : base(fullName, name) { }
+    // Code
 
-        public override string Label { get; set; } = "Class";
+    public abstract class CodeNode : Node
+    {
+        public CodeNode(string fullName, string name)
+            : base(fullName, name)
+        {
+        }
+
+        public CodeNode(string[] str, string fullName, string name)
+            : base(fullName, name)
+        {
+        }
     }
 
-    public class InterfaceNode : Node
+    public class ClassNode : CodeNode
     {
-        public InterfaceNode(string fullName, string name) : base(fullName, name) { }
+        public ClassNode(string fullName, string name, bool isStatic)
+            : base(fullName, name)
+        {
+            IsStatic = isStatic;
+        }
 
-        public override string Label { get; set; } = "Interface";
+        public override string Label { get; } = "Class";
+
+        public bool IsStatic { get; }
+
+        public override string Set(string node)
+            => $"{base.Set(node)}, {node}.isStatic = {IsStatic}";
     }
 
-    public class MethodNode : Node
+    public class InterfaceNode : CodeNode
     {
-        public MethodNode(string[] str, string fullName, string name) : base(str, fullName, name) { }
+        public InterfaceNode(string fullName, string name)
+            : base(fullName, name) { }
 
-        public override string Label { get; set; } = "Method";
+        public override string Label { get; } = "Interface";
     }
 
-    public class ModuleNode : Node
+    public class MethodNode : CodeNode
     {
-        public ModuleNode(string fullName, string name) : base(fullName, name) { }
+        public MethodNode(string fullName, string name, (string name, string type)[] args, string returnType)
+            : base(fullName, name)
+        {
+            Arguments = args.Aggregate("", (a, x) => $"{a}{x.name}: {x.type}, ");
+            ReturnType = returnType;
+        }
 
-        public override string Label { get; set; } = "Module";
+        public override string Label { get; } = "Method";
+
+        public string Arguments { get; }
+
+        public string ReturnType { get; }
+
+        public override string Set(string node)
+            => $"{base.Set(node)}, {node}.returnType = \"{ReturnType}\", {node}.arguments = \"{Arguments}\"";
+
+        protected override void SetPrimaryKey()
+        {
+            Pk = $"{FullName}{Arguments}{ReturnType}".GetHashCode().ToString();
+        }
+    }
+
+    // Structure
+
+    public abstract class StructureNode : Node
+    {
+        public StructureNode(string fullName, string name)
+            : base(fullName, name)
+        {
+        }
+    }
+
+    public class FileNode : StructureNode
+    {
+        public FileNode(string fullName, string name)
+            : base(fullName, name) { }
+
+        public override string Label { get; } = "File";
+    }
+
+    public class FolderNode : StructureNode
+    {
+        public FolderNode(string fullName, string name)
+            : base(fullName, name) { }
+
+        public override string Label { get; } = "Folder";
+    }
+
+    public class ProjectNode : StructureNode
+    {
+        public ProjectNode(string name)
+            : this(name, name) { }
+
+        public ProjectNode(string fullName, string name)
+            : base(fullName, name) { }
+
+        public override string Label { get; } = "Project";
+    }
+
+    public class PackageNode : StructureNode
+    {
+        public PackageNode(string fullName, string name, string version)
+            : base(fullName, name)
+        {
+            Version = version;
+        }
+
+        public override string Label { get; } = "Package";
+
+        public string Version { get; }
+
+        public override string Set(string node)
+            => $"{base.Set(node)}, {node}.version = \"{Version}\"";
+
+        protected override void SetPrimaryKey()
+        {
+            Pk = $"{FullName}{Version}".GetHashCode().ToString();
+        }
     }
 }

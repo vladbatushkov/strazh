@@ -25,6 +25,16 @@ namespace Strazh.Domain
         public override string Type => "OF_TYPE";
     }
 
+    public class DeclaredAtRelationship : Relationship
+    {
+        public override string Type => "DECLARED_AT";
+    }
+
+    public class IncludedInRelationship : Relationship
+    {
+        public override string Type => "INCLUDED_IN";
+    }
+
     public class DependsOnRelationship : Relationship
     {
         public override string Type => "DEPENDS_ON";
