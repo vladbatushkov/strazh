@@ -2,7 +2,7 @@
   "profiles": {
     "Strazh": {
       "commandName": "Project",
-      "commandLineArgs": "-cs \"neo4j:neo4j:strazh\" -pl \"\""
+      "commandLineArgs": "-c \"neo4j:neo4j:strazh\" -m \"Structure\" -s \"C:\\src\\agoda-front-end\\agoda-com-dictator\\Src\\Website.Cronos\\Agoda.Cronos.sln\""
     }
   }
 }

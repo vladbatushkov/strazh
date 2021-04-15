@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading.Tasks;
+using Buildalyzer;
 using Strazh.Analysis;
 using Strazh.Database;
 
@@ -21,41 +22,54 @@ namespace Strazh
 #endif
             var rootCommand = new RootCommand();
 
-            var optionCred = new Option<string>("--credentials", "credentials as `dbname:user:password` to connect to Neo4j batabase");
-            optionCred.AddAlias("-cs");
-            optionCred.IsRequired = true;
-            rootCommand.Add(optionCred);
+            var optionCredentials = new Option<string>("--credentials", "required flag of credentials as `dbname:user:password` to connect to Neo4j database");
+            optionCredentials.AddAlias("-c");
+            optionCredentials.IsRequired = true;
+            rootCommand.Add(optionCredentials);
 
-            var optionPath = new Option<string[]>("--pathlist", "list of absolute path to .csproj files");
-            optionPath.AddAlias("-pl");
-            optionPath.IsRequired = true;
-            rootCommand.Add(optionPath);
+            var optionMode = new Option<string>("--mode", "optional flag of mode as `code` or `structure` or no flag (mean both `code` and `structure`) to explicitly limited scan of codebase");
+            optionMode.AddAlias("-m");
+            optionMode.IsRequired = false;
+            rootCommand.Add(optionMode);
 
-            rootCommand.Handler = CommandHandler.Create<string, string[]>(BuildKnowledgeGraph);
+            var optionSolution = new Option<string>("--solution", "optional absolute path to only one .sln file (can't be used together with -p / --projects)");
+            optionSolution.AddAlias("-s");
+            optionSolution.IsRequired = false;
+            rootCommand.Add(optionSolution);
+
+            var optionProjects = new Option<string[]>("--projects", "optional list of absolute path to one or many .csproj files (can't be used together with -s / --solution)");
+            optionProjects.AddAlias("-p");
+            optionProjects.IsRequired = false;
+            rootCommand.Add(optionProjects);
+
+            rootCommand.Handler = CommandHandler.Create<string, string, string, string[]>(BuildKnowledgeGraph);
             await rootCommand.InvokeAsync(args);
         }
 
-        private static async Task BuildKnowledgeGraph(string credentials, string[] pathlist)
+        private static async Task BuildKnowledgeGraph(string credentials, string mode, string solution, string[] projects)
         {
             try
             {
+                var config = new AnalyzerConfig(
+                       credentials,
+                       mode,
+                       solution,
+                       projects
+                   );
+                if (!config.IsValid)
+                {
+                    Console.WriteLine("Please submit one thing: `--solution` (-s) or `--projects` (-p)");
+                    return;
+                }
                 var isNeo4jReady = await Healthcheck.IsNeo4jReady();
                 if (!isNeo4jReady)
                 {
                     Console.WriteLine("Strazh disappointed. There is no Neo4j instance ready to use.");
                     return;
                 }
-                Console.WriteLine("Brewing the Code Knowledge Graph.");
-                var isOverride = true;
-                foreach (var path in pathlist)
-                {
-                    var triples = await Analyzer.Analyze(path);
-                    if (triples.Length > 0)
-                    {
-                        await DbManager.InsertData(triples, credentials, isOverride);
-                    }
-                    isOverride = false;
-                }
+
+                Console.WriteLine($"Brewing a Code Knowledge Graph in \"{config.Mode}\" mode.");                
+                await Analyzer.Analyze(config);
                 Console.WriteLine("Code Knowledge Graph created.");
             }
             catch (Exception ex)
