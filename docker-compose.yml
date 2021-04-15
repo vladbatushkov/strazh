@@ -9,8 +9,8 @@ services:
     volumes:
       - ./Strazh:/dest
     environment:
-      - cs=neo4j:neo4j:strazh
-      - pl=/dest/Strazh.csproj
+      - c=neo4j:neo4j:strazh
+      - p=/dest/Strazh.csproj
     depends_on:
       - neo4j
 
