@@ -7,10 +7,11 @@ services:
     container_name: strazh
     network_mode: host
     volumes:
-      - ./Strazh:/dest
+      - C:\src\agoda-front-end\cronos\framework\src\Agoda.Cronos.Bootstrap:/dest
     environment:
       - c=neo4j:neo4j:strazh
-      - p=/dest/Strazh.csproj
+      - p=/dest/Agoda.Cronos.Bootstrap.csproj
+      - m=all
     depends_on:
       - neo4j
 

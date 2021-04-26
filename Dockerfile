@@ -8,8 +8,8 @@ WORKDIR /src
 COPY Strazh Strazh/
 RUN dotnet build /src/Strazh/Strazh.csproj -c Release -o /app
 WORKDIR /app
-ENV c=neo4j:neo4j:neo4j
-ENV m=
-ENV p=
-ENV s=
+ENV c="neo4j:neo4j:neo4j"
+ENV m="all"
+ENV s="none"
+ENV p=""
 CMD ["sh", "-c", "dotnet Strazh.dll -c $c -m $m -s $s -p $p"]

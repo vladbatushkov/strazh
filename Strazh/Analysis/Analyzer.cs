@@ -30,7 +30,7 @@ namespace Strazh.Analysis
                 : config.Projects.Select(x => manager.GetProject(x));
 
             var isOverride = true;
-            Console.WriteLine($"Analyzing {projectAnalyzers.Count()} projects.");
+            Console.WriteLine($"Analyzing {projectAnalyzers.Count()} project/s.");
             foreach (var projectAnalyzer in projectAnalyzers)
             {
                 var triples = await AnalyzeProject(projectAnalyzer, config.Mode);
@@ -66,7 +66,8 @@ namespace Strazh.Analysis
                 });
             }
 
-            if (mode == AnalyzeMode.All || mode == AnalyzeMode.Code)
+            if (project.SupportsCompilation
+                && (mode == AnalyzeMode.All || mode == AnalyzeMode.Code))
             {
                 var compilation = await project.GetCompilationAsync();
                 var syntaxTreeRoot = compilation.SyntaxTrees;

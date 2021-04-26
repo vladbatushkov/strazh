@@ -11,22 +11,25 @@ namespace Strazh.Analysis
     {
         public static Node CreateNode(this ISymbol symbol, TypeDeclarationSyntax declaration)
         {
-            (string fullName, string name) raw = (symbol.ContainingNamespace.ToString() + '.' + symbol.Name, symbol.Name);
+            (string fullName, string name) = (symbol.ContainingNamespace.ToString() + '.' + symbol.Name, symbol.Name);
             switch (declaration)
             {
                 case ClassDeclarationSyntax _:
-                    return new ClassNode(raw.fullName, raw.name, symbol.IsStatic);
+                    return new ClassNode(fullName, name, declaration.Modifiers.MapModifiers());
                 case InterfaceDeclarationSyntax _:
-                    return new InterfaceNode(raw.fullName, raw.name);
+                    return new InterfaceNode(fullName, name, declaration.Modifiers.MapModifiers());
             }
             return null;
         }
 
         public static ClassNode CreateClassNode(this TypeInfo typeInfo)
-            => new ClassNode(GetFullName(typeInfo), GetName(typeInfo), typeInfo.Type.IsStatic);
+            => new ClassNode(GetFullName(typeInfo), GetName(typeInfo));
 
         public static InterfaceNode CreateInterfaceNode(this TypeInfo typeInfo)
             => new InterfaceNode(GetFullName(typeInfo), GetName(typeInfo));
+
+        public static string[] MapModifiers(this SyntaxTokenList syntaxTokens)
+            => syntaxTokens.Select(x => x.ValueText).ToArray();
 
         public static Node CreateNode(this TypeInfo typeInfo)
         {
@@ -49,14 +52,14 @@ namespace Strazh.Analysis
         public static string GetFullName(this TypeInfo typeInfo)
             => typeInfo.Type.ContainingNamespace.ToString() + "." + GetName(typeInfo);
 
-        public static MethodNode CreateMethodNode(this IMethodSymbol symbol)
+        public static MethodNode CreateMethodNode(this IMethodSymbol symbol, TypeDeclarationSyntax declaration = null)
         {
             var fullName = symbol.ContainingSymbol.ToString() + '.' + symbol.Name;
             var args = symbol.Parameters.Select(x => {
                 var type = x.Type.ToString();
                 return (name: x.Name, type);
             }).ToArray();
-            return new MethodNode(fullName, symbol.Name, args, "");
+            return new MethodNode(fullName, symbol.Name, args, "unknown", declaration?.Modifiers.MapModifiers());
         }
 
         public static string[] ChainKey(this IMethodSymbol symbol, string str)
@@ -84,9 +87,9 @@ namespace Strazh.Analysis
         /// <summary>
         /// Member (field, property) initialization
         /// </summary>
-        public static void GetConstructsWithinClass(IList<Triple> triples, ClassDeclarationSyntax classDeclaration, SemanticModel sem, ClassNode classNode)
+        public static void GetConstructsWithinClass(IList<Triple> triples, ClassDeclarationSyntax declaration, SemanticModel sem, ClassNode classNode)
         {
-            var creates = classDeclaration.DescendantNodes().OfType<ObjectCreationExpressionSyntax>();
+            var creates = declaration.DescendantNodes().OfType<ObjectCreationExpressionSyntax>();
             foreach (var creation in creates)
             {
                 var node = sem.GetTypeInfo(creation).CreateClassNode();
@@ -97,11 +100,11 @@ namespace Strazh.Analysis
         /// <summary>
         /// Type inherited from BaseType
         /// </summary>
-        public static void GetInherits(IList<Triple> triples, TypeDeclarationSyntax typeDeclaration, SemanticModel sem, Node node)
+        public static void GetInherits(IList<Triple> triples, TypeDeclarationSyntax declaration, SemanticModel sem, Node node)
         {
-            if (typeDeclaration.BaseList != null)
+            if (declaration.BaseList != null)
             {
-                foreach (var baseTypeSyntax in typeDeclaration.BaseList.Types)
+                foreach (var baseTypeSyntax in declaration.BaseList.Types)
                 {
                     var parentNode = sem.GetTypeInfo(baseTypeSyntax.Type).CreateNode();
                     if (parentNode != null)
@@ -115,12 +118,12 @@ namespace Strazh.Analysis
         /// <summary>
         /// Class or Interface have some method AND some method can call another method AND some method can creates an object of class
         /// </summary>
-        public static void GetMethodsAll(IList<Triple> triples, TypeDeclarationSyntax declarationSyntax, SemanticModel sem, Node node)
+        public static void GetMethodsAll(IList<Triple> triples, TypeDeclarationSyntax declaration, SemanticModel sem, Node node)
         {
-            var methods = declarationSyntax.DescendantNodes().OfType<MethodDeclarationSyntax>();
+            var methods = declaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
             foreach (var method in methods)
             {
-                var methodNode = sem.GetDeclaredSymbol(method).CreateMethodNode();
+                var methodNode = sem.GetDeclaredSymbol(method).CreateMethodNode(declaration);
                 triples.Add(new TripleHave(node, methodNode));
 
                 foreach (var syntax in method.DescendantNodes().OfType<ExpressionSyntax>())

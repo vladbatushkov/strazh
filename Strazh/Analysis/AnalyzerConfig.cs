@@ -42,6 +42,7 @@
 
         public AnalyzerConfig(string credentials, string mode, string solution, string[] projects)
         {
+            solution = solution == "none" ? "" : solution;
             Credentials = new CredentialsConfig(credentials);
             Mode = MapMode(mode);
             Solution = solution;
@@ -49,7 +50,7 @@
         }
 
         private AnalyzeMode MapMode(string mode)
-            => mode.ToLowerInvariant() switch
+            => (mode ?? "").ToLowerInvariant() switch
                 {
                     "structure" => AnalyzeMode.Structure,
                     "code" => AnalyzeMode.Code,

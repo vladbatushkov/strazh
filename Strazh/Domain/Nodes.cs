@@ -38,47 +38,45 @@ namespace Strazh.Domain
 
     public abstract class CodeNode : Node
     {
-        public CodeNode(string fullName, string name)
+        public CodeNode(string fullName, string name, string[] modifiers = null)
             : base(fullName, name)
         {
+
+            Modifiers = modifiers == null ? "" : string.Join(", ", modifiers);
         }
 
-        public CodeNode(string[] str, string fullName, string name)
-            : base(fullName, name)
-        {
-        }
+        public string Modifiers { get; }
+
+        public override string Set(string node)
+            => $"{base.Set(node)}{(string.IsNullOrEmpty(Modifiers) ? "" : $", {node}.modifiers = \"{Modifiers}\"")}";
     }
 
     public class ClassNode : CodeNode
     {
-        public ClassNode(string fullName, string name, bool isStatic)
-            : base(fullName, name)
+        public ClassNode(string fullName, string name, string[] modifiers = null)
+            : base(fullName, name, modifiers)
         {
-            IsStatic = isStatic;
         }
 
         public override string Label { get; } = "Class";
-
-        public bool IsStatic { get; }
-
-        public override string Set(string node)
-            => $"{base.Set(node)}, {node}.isStatic = {IsStatic}";
     }
 
     public class InterfaceNode : CodeNode
     {
-        public InterfaceNode(string fullName, string name)
-            : base(fullName, name) { }
+        public InterfaceNode(string fullName, string name, string[] modifiers = null)
+            : base(fullName, name, modifiers)
+        {
+        }
 
         public override string Label { get; } = "Interface";
     }
 
     public class MethodNode : CodeNode
     {
-        public MethodNode(string fullName, string name, (string name, string type)[] args, string returnType)
-            : base(fullName, name)
+        public MethodNode(string fullName, string name, (string name, string type)[] args, string returnType, string[] modifiers = null)
+            : base(fullName, name, modifiers)
         {
-            Arguments = args.Aggregate("", (a, x) => $"{a}{x.name}: {x.type}, ");
+            Arguments = string.Join(", ", args.Select(x => $"{x.type} {x.name}"));
             ReturnType = returnType;
         }
 
