@@ -16,7 +16,7 @@ namespace Strazh.Domain
         }
 
         public override string ToString()
-            => $"MERGE (a:{NodeA.Label} {{ {NodeA.Match()} }}) ON CREATE SET {NodeA.Set("a")} MERGE (b:{NodeB.Label} {{ {NodeB.Match()} }}) ON CREATE SET {NodeB.Set("b")} MERGE (a)-[:{Relationship.Type}]->(b);";
+            => $"MERGE (a:{NodeA.Label} {{ {NodeA.Match()} }}) ON CREATE SET {NodeA.Set("a")} ON MATCH SET {NodeA.Set("a")} MERGE (b:{NodeB.Label} {{ {NodeB.Match()} }}) ON CREATE SET {NodeB.Set("b")} ON MATCH SET {NodeB.Set("b")} MERGE (a)-[:{Relationship.Type}]->(b);";
     }
 
     // Structure

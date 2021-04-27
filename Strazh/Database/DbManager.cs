@@ -17,7 +17,7 @@ namespace Strazh.Database
             {
                 throw new ArgumentException($"Please, provide credentials.");
             }
-            Console.WriteLine($"Connecting to Neo4j database={credentials.Database}, user={credentials.User}, password={credentials.Password}");
+            Console.WriteLine($"Connecting to Neo4j database \"{credentials.Database}\"");
             var driver = GraphDatabase.Driver(CONNECTION, AuthTokens.Basic(credentials.User, credentials.Password));
             var session = driver.AsyncSession(o => o.WithDatabase(credentials.Database));
             try
