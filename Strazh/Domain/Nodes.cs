@@ -111,6 +111,9 @@ namespace Strazh.Domain
             : base(fullName, name) { }
 
         public override string Label { get; } = "File";
+
+        public static string GetName(string filePath)
+            => filePath.Split("\\").Reverse().FirstOrDefault();
     }
 
     public class FolderNode : StructureNode

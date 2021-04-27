@@ -9,7 +9,7 @@ namespace Strazh.Analysis
 {
     public static class Extractor
     {
-        public static Node CreateNode(this ISymbol symbol, TypeDeclarationSyntax declaration)
+        public static CodeNode CreateNode(this ISymbol symbol, TypeDeclarationSyntax declaration)
         {
             (string fullName, string name) = (symbol.ContainingNamespace.ToString() + '.' + symbol.Name, symbol.Name);
             switch (declaration)
@@ -65,19 +65,22 @@ namespace Strazh.Analysis
         public static string[] ChainKey(this IMethodSymbol symbol, string str)
             => new string[] { str }.Union(symbol.Parameters.Select(x => x.Type.ToString())).ToArray();
 
-
         /// <summary>
         /// Entry to analyze class or interface
         /// </summary>
         public static void AnalyzeTree<T>(IList<Triple> triples, SyntaxTree st, SemanticModel sem)
             where T : TypeDeclarationSyntax
         {
-            var declarations = st.GetRoot().DescendantNodes().OfType<T>();
+            var root = st.GetRoot();
+            var filePath = root.SyntaxTree.FilePath;
+            var fileNode = new FileNode(filePath, FileNode.GetName(filePath));
+            var declarations = root.DescendantNodes().OfType<T>();
             foreach (var declaration in declarations)
             {
                 var node = sem.GetDeclaredSymbol(declaration).CreateNode(declaration);
                 if (node != null)
                 {
+                    triples.Add(new TripleDeclaredAt(node, fileNode));
                     GetInherits(triples, declaration, sem, node);
                     GetMethodsAll(triples, declaration, sem, node);
                 }
