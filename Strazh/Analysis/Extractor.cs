@@ -36,10 +36,10 @@ namespace Strazh.Analysis
             switch (typeInfo.ConvertedType.TypeKind)
             {
                 case TypeKind.Interface:
-                    return CreateClassNode(typeInfo);
+                    return CreateInterfaceNode(typeInfo);
 
                 case TypeKind.Class:
-                    return CreateInterfaceNode(typeInfo);
+                    return CreateClassNode(typeInfo);
 
                 default:
                     return null;
