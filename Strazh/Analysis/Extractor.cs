@@ -9,7 +9,7 @@ namespace Strazh.Analysis
 {
     public static class Extractor
     {
-        public static CodeNode CreateNode(this ISymbol symbol, TypeDeclarationSyntax declaration)
+        private static CodeNode CreateNode(this ISymbol symbol, TypeDeclarationSyntax declaration)
         {
             (string fullName, string name) = (symbol.ContainingNamespace.ToString() + '.' + symbol.Name, symbol.Name);
             switch (declaration)
@@ -22,16 +22,16 @@ namespace Strazh.Analysis
             return null;
         }
 
-        public static ClassNode CreateClassNode(this TypeInfo typeInfo)
+        private static ClassNode CreateClassNode(this TypeInfo typeInfo)
             => new ClassNode(GetFullName(typeInfo), GetName(typeInfo));
 
-        public static InterfaceNode CreateInterfaceNode(this TypeInfo typeInfo)
+        private static InterfaceNode CreateInterfaceNode(this TypeInfo typeInfo)
             => new InterfaceNode(GetFullName(typeInfo), GetName(typeInfo));
 
-        public static string[] MapModifiers(this SyntaxTokenList syntaxTokens)
+        private static string[] MapModifiers(this SyntaxTokenList syntaxTokens)
             => syntaxTokens.Select(x => x.ValueText).ToArray();
 
-        public static Node CreateNode(this TypeInfo typeInfo)
+        private static Node CreateNode(this TypeInfo typeInfo)
         {
             switch (typeInfo.ConvertedType.TypeKind)
             {
@@ -46,13 +46,13 @@ namespace Strazh.Analysis
             }
         }
 
-        public static string GetName(this TypeInfo typeInfo)
+        private static string GetName(this TypeInfo typeInfo)
             => typeInfo.Type.Name;
 
-        public static string GetFullName(this TypeInfo typeInfo)
+        private static string GetFullName(this TypeInfo typeInfo)
             => typeInfo.Type.ContainingNamespace.ToString() + "." + GetName(typeInfo);
 
-        public static MethodNode CreateMethodNode(this IMethodSymbol symbol, TypeDeclarationSyntax declaration = null)
+        private static MethodNode CreateMethodNode(this IMethodSymbol symbol, TypeDeclarationSyntax declaration = null)
         {
             var fullName = symbol.ContainingSymbol.ToString() + '.' + symbol.Name;
             var args = symbol.Parameters.Select(x => {
@@ -62,18 +62,50 @@ namespace Strazh.Analysis
             return new MethodNode(fullName, symbol.Name, args, "unknown", declaration?.Modifiers.MapModifiers());
         }
 
-        public static string[] ChainKey(this IMethodSymbol symbol, string str)
-            => new string[] { str }.Union(symbol.Parameters.Select(x => x.Type.ToString())).ToArray();
+        private static string GetName(string filePath)
+            => filePath.Split("\\").Reverse().FirstOrDefault();
+
+        private static List<TripleIncludedIn> GetFolderChain(string filePath, FileNode file)
+        {
+            var triples = new List<TripleIncludedIn>();
+            var chain = filePath.Split("\\");
+            FolderNode prev = null;
+            var path = string.Empty;
+            foreach (var item in chain)
+            {
+                if (string.IsNullOrEmpty(path))
+                {
+                    path = item;
+                    prev = new FolderNode(path, item);
+                    continue;
+                }
+                if (item == file.Name)
+                {
+                    triples.Add(new TripleIncludedIn(file, prev));
+                    return triples;
+                }
+                else
+                {
+                    path = $"{path}\\{item}";
+                    triples.Add(new TripleIncludedIn(new FolderNode(path, item), new FolderNode(prev.FullName, prev.Name)));
+                    prev = new FolderNode(path, item);
+                }
+            }
+            return triples;
+        }
 
         /// <summary>
         /// Entry to analyze class or interface
         /// </summary>
-        public static void AnalyzeTree<T>(IList<Triple> triples, SyntaxTree st, SemanticModel sem)
+        public static void AnalyzeTree<T>(IList<Triple> triples, SyntaxTree st, SemanticModel sem, FolderNode rootFolder)
             where T : TypeDeclarationSyntax
         {
             var root = st.GetRoot();
             var filePath = root.SyntaxTree.FilePath;
-            var fileNode = new FileNode(filePath, FileNode.GetName(filePath));
+            filePath = filePath.Substring(filePath.IndexOf(rootFolder.Name));
+            var fileName = GetName(filePath);
+            var fileNode = new FileNode(filePath, fileName);
+            GetFolderChain(filePath, fileNode).ForEach(triples.Add);
             var declarations = root.DescendantNodes().OfType<T>();
             foreach (var declaration in declarations)
             {

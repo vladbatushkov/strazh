@@ -48,21 +48,24 @@ namespace Strazh.Analysis
             
             var workspace = new AdhocWorkspace();
             var project = projectAnalyzer.AddToWorkspace(workspace);
+            var root = GetRoot(project.FilePath);
+            var rootNode = new FolderNode(root, root);
             var projectName = GetProjectName(project.Name);
             if (mode == AnalyzeMode.All || mode == AnalyzeMode.Structure)
             {
                 var projectBuild = projectAnalyzer.Build().FirstOrDefault();
-                var currentNode = new ProjectNode(projectName);
+                var projectNode = new ProjectNode(projectName);
+                triples.Add(new TripleIncludedIn(projectNode, rootNode));
                 projectBuild.ProjectReferences.ToList().ForEach(x =>
                 {
                     var node = new ProjectNode(GetProjectName(x));
-                    triples.Add(new TripleDependsOnProject(currentNode, node));
+                    triples.Add(new TripleDependsOnProject(projectNode, node));
                 });
                 projectBuild.PackageReferences.ToList().ForEach(x =>
                 {
                     var version = x.Value.Values.FirstOrDefault(x => x.Contains(".")) ?? "none";
                     var node = new PackageNode(x.Key, x.Key, version);
-                    triples.Add(new TripleDependsOnPackage(currentNode, node));
+                    triples.Add(new TripleDependsOnPackage(projectNode, node));
                 });
             }
 
@@ -74,8 +77,8 @@ namespace Strazh.Analysis
                 foreach (var st in syntaxTreeRoot)
                 {
                     var sem = compilation.GetSemanticModel(st);
-                    Extractor.AnalyzeTree<ClassDeclarationSyntax>(triples, st, sem);
-                    Extractor.AnalyzeTree<InterfaceDeclarationSyntax>(triples, st, sem);
+                    Extractor.AnalyzeTree<ClassDeclarationSyntax>(triples, st, sem, rootNode);
+                    Extractor.AnalyzeTree<InterfaceDeclarationSyntax>(triples, st, sem, rootNode);
                 }
                 triples = triples.GroupBy(x => x.ToString()).Select(x => x.First()).ToList();
             }
@@ -83,5 +86,8 @@ namespace Strazh.Analysis
             Console.WriteLine($"Codebase of project \"{projectName}\" analyzed with result of {triples.Count} triples.");
             return triples;
         }
+
+        private static string GetRoot(string filePath)
+            => filePath.Split("\\").Reverse().Skip(1).FirstOrDefault();
     }
 }

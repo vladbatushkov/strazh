@@ -42,8 +42,20 @@ namespace Strazh.Domain
     public class TripleIncludedIn : Triple
     {
         public TripleIncludedIn(
-            StructureNode contentA,
-            StructureNode contentB)
+            ProjectNode contentA,
+            FolderNode contentB)
+            : base(contentA, contentB, new IncludedInRelationship())
+        { }
+
+        public TripleIncludedIn(
+            FolderNode contentA,
+            FolderNode contentB)
+            : base(contentA, contentB, new IncludedInRelationship())
+        { }
+
+        public TripleIncludedIn(
+            FileNode contentA,
+            FolderNode contentB)
             : base(contentA, contentB, new IncludedInRelationship())
         { }
     }

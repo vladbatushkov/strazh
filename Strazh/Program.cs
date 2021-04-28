@@ -1,11 +1,8 @@
 ﻿using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.Linq;
 using System.Threading.Tasks;
-using Buildalyzer;
 using Strazh.Analysis;
-using Strazh.Database;
 
 namespace Strazh
 {
