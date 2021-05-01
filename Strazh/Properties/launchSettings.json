@@ -2,7 +2,7 @@
   "profiles": {
     "Strazh": {
       "commandName": "Project",
-      "commandLineArgs": "-c \"neo4j:neo4j:strazh\" -p \"C:\\src\\agoda-front-end\\cronos\\framework\\src\\Agoda.Cronos.Bootstrap\\Agoda.Cronos.Bootstrap.csproj\""
+      "commandLineArgs": "-c \"neo4j:neo4j:strazh\" -p \"C:\\src\\agoda-front-end\\cronos\\framework\\src\\Agoda.Cronos.Bootstrap\\Agoda.Cronos.Bootstrap.csproj\" \"C:\\src\\agoda-front-end\\cronos\\framework\\src\\Tests\\Agoda.Cronos.BootstrapUnitTests\\Agoda.Cronos.BootstrapUnitTests.csproj\""
     }
   }
 }

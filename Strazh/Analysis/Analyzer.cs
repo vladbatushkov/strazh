@@ -14,13 +14,10 @@ namespace Strazh.Analysis
 {
     public static class Analyzer
     {
-        private static string GetProjectName(string fullName)
-        {
-            return fullName.Split('\\').Last().Replace(".csproj", "");
-        }
-
         public static async Task Analyze(AnalyzerConfig config)
         {
+            Console.WriteLine($"Setup analyzer...");
+
             var manager = config.IsSolutionBased
                 ? new AnalyzerManager(config.Solution)
                 : new AnalyzerManager();
@@ -29,30 +26,37 @@ namespace Strazh.Analysis
                 ? manager.Projects.Values
                 : config.Projects.Select(x => manager.GetProject(x));
 
-            var isOverride = true;
-            Console.WriteLine($"Analyzing {projectAnalyzers.Count()} project/s.");
+            Console.WriteLine($"Analyzer ready to analyze {projectAnalyzers.Count()} project/s.");
+
+            var workspace = new AdhocWorkspace();
+            var isDelete = config.IsDelete;
+            short index = 1;
             foreach (var projectAnalyzer in projectAnalyzers)
             {
-                var triples = await AnalyzeProject(projectAnalyzer, config.Mode);
+                var triples = await AnalyzeProject(index, workspace, projectAnalyzer, config.Mode);
                 if (triples.Count > 0)
                 {
-                    await DbManager.InsertData(triples, config.Credentials, isOverride);
+                    await DbManager.InsertData(triples, config.Credentials, isDelete);
                 }
-                isOverride = false;
+                index++;
+                isDelete = false;
             }
+            workspace.Dispose();
         }
 
-        private static async Task<IList<Triple>> AnalyzeProject(IProjectAnalyzer projectAnalyzer, AnalyzeMode mode)
+        private static async Task<IList<Triple>> AnalyzeProject(short index, AdhocWorkspace workspace, IProjectAnalyzer projectAnalyzer, AnalyzeMode mode)
         {
-            var triples = new List<Triple>();
-            
-            var workspace = new AdhocWorkspace();
+            Console.WriteLine($"Project #{index}:");
             var project = projectAnalyzer.AddToWorkspace(workspace);
             var root = GetRoot(project.FilePath);
             var rootNode = new FolderNode(root, root);
             var projectName = GetProjectName(project.Name);
+            Console.WriteLine($"Analyzing {projectName} project...");
+
+            var triples = new List<Triple>();
             if (mode == AnalyzeMode.All || mode == AnalyzeMode.Structure)
             {
+                Console.WriteLine($"Analyzing Structure level...");
                 var projectBuild = projectAnalyzer.Build().FirstOrDefault();
                 var projectNode = new ProjectNode(projectName);
                 triples.Add(new TripleIncludedIn(projectNode, rootNode));
@@ -67,11 +71,13 @@ namespace Strazh.Analysis
                     var node = new PackageNode(x.Key, x.Key, version);
                     triples.Add(new TripleDependsOnPackage(projectNode, node));
                 });
+                Console.WriteLine($"Analyzing Structure level complete.");
             }
 
             if (project.SupportsCompilation
                 && (mode == AnalyzeMode.All || mode == AnalyzeMode.Code))
             {
+                Console.WriteLine($"Analyzing Code level...");
                 var compilation = await project.GetCompilationAsync();
                 var syntaxTreeRoot = compilation.SyntaxTrees;
                 foreach (var st in syntaxTreeRoot)
@@ -80,12 +86,16 @@ namespace Strazh.Analysis
                     Extractor.AnalyzeTree<ClassDeclarationSyntax>(triples, st, sem, rootNode);
                     Extractor.AnalyzeTree<InterfaceDeclarationSyntax>(triples, st, sem, rootNode);
                 }
+                Console.WriteLine($"Analyzing Code level complete.");
                 triples = triples.GroupBy(x => x.ToString()).Select(x => x.First()).ToList();
             }
 
-            Console.WriteLine($"Codebase of project \"{projectName}\" analyzed with result of {triples.Count} triples.");
+            Console.WriteLine($"Analyzing {projectName} project complete.");
             return triples;
         }
+
+        private static string GetProjectName(string fullName)
+            => fullName.Split('\\').Last().Replace(".csproj", "");
 
         private static string GetRoot(string filePath)
             => filePath.Split("\\").Reverse().Skip(1).FirstOrDefault();

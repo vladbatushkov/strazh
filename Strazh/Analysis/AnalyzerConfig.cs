@@ -34,17 +34,19 @@
         public AnalyzeMode Mode { get; }
         public string Solution { get; }
         public string[] Projects { get; }
+        public bool IsDelete { get; }
 
         public bool IsSolutionBased => !string.IsNullOrEmpty(Solution);
 
         public bool IsValid => (!string.IsNullOrEmpty(Solution) && Projects.Length == 0)
             || (string.IsNullOrEmpty(Solution) && Projects.Length > 0);
 
-        public AnalyzerConfig(string credentials, string mode, string solution, string[] projects)
+        public AnalyzerConfig(string credentials, string mode, string delete, string solution, string[] projects)
         {
             solution = solution == "none" ? "" : solution;
             Credentials = new CredentialsConfig(credentials);
             Mode = MapMode(mode);
+            IsDelete = delete != "false";
             Solution = solution;
             Projects = projects ?? new string[] { };
         }

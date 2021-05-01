@@ -2,8 +2,8 @@ using Neo4j.Driver;
 using System;
 using System.Threading.Tasks;
 using Strazh.Domain;
-using static Strazh.Analysis.AnalyzerConfig;
 using System.Collections.Generic;
+using static Strazh.Analysis.AnalyzerConfig;
 
 namespace Strazh.Database
 {
@@ -11,28 +11,29 @@ namespace Strazh.Database
     {
         private const string CONNECTION = "neo4j://localhost:7687";
 
-        public static async Task InsertData(IList<Triple> triples, CredentialsConfig credentials, bool isOverride = true)
+        public static async Task InsertData(IList<Triple> triples, CredentialsConfig credentials, bool isDelete)
         {
             if (credentials == null)
             {
                 throw new ArgumentException($"Please, provide credentials.");
             }
-            Console.WriteLine($"Connecting to Neo4j database \"{credentials.Database}\"");
+            Console.WriteLine($"Code Knowledge Graph use \"{credentials.Database}\" Neo4j database.");
             var driver = GraphDatabase.Driver(CONNECTION, AuthTokens.Basic(credentials.User, credentials.Password));
             var session = driver.AsyncSession(o => o.WithDatabase(credentials.Database));
             try
             {
-                if (isOverride)
+                if (isDelete)
                 {
+                    Console.WriteLine($"Deleting graph data of \"{credentials.Database}\" database...");
                     await session.RunAsync("MATCH (n) DETACH DELETE n;");
-                    Console.WriteLine($"Database \"{credentials.Database}\" is cleaned.");
+                    Console.WriteLine($"Deleting graph data of \"{credentials.Database}\" database complete.");
                 }
+                Console.WriteLine($"Processing {triples.Count} triples...");
                 foreach (var triple in triples)
                 {
-                    //Console.WriteLine($"Executing command: {triple}");
                     await session.RunAsync(triple.ToString());
                 }
-                Console.WriteLine($"Merged {triples.Count} triples.");
+                Console.WriteLine($"Processing {triples.Count} triples complete.");
             }
             catch (Exception ex)
             {

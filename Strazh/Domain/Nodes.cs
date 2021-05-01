@@ -2,7 +2,7 @@ using System.Linq;
 
 namespace Strazh.Domain
 {
-    public class Node
+    public abstract class Node
     {
         public virtual string Label { get; }
 
@@ -78,6 +78,7 @@ namespace Strazh.Domain
         {
             Arguments = string.Join(", ", args.Select(x => $"{x.type} {x.name}"));
             ReturnType = returnType;
+            SetPrimaryKey();
         }
 
         public override string Label { get; } = "Method";
@@ -97,15 +98,7 @@ namespace Strazh.Domain
 
     // Structure
 
-    public abstract class StructureNode : Node
-    {
-        public StructureNode(string fullName, string name)
-            : base(fullName, name)
-        {
-        }
-    }
-
-    public class FileNode : StructureNode
+    public class FileNode : Node
     {
         public FileNode(string fullName, string name)
             : base(fullName, name) { }
@@ -113,7 +106,7 @@ namespace Strazh.Domain
         public override string Label { get; } = "File";
     }
 
-    public class FolderNode : StructureNode
+    public class FolderNode : Node
     {
         public FolderNode(string fullName, string name)
             : base(fullName, name) { }
@@ -121,7 +114,7 @@ namespace Strazh.Domain
         public override string Label { get; } = "Folder";
     }
 
-    public class ProjectNode : StructureNode
+    public class ProjectNode : Node
     {
         public ProjectNode(string name)
             : this(name, name) { }
@@ -132,12 +125,13 @@ namespace Strazh.Domain
         public override string Label { get; } = "Project";
     }
 
-    public class PackageNode : StructureNode
+    public class PackageNode : Node
     {
         public PackageNode(string fullName, string name, string version)
             : base(fullName, name)
         {
             Version = version;
+            SetPrimaryKey();
         }
 
         public override string Label { get; } = "Package";

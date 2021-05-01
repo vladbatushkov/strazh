@@ -52,14 +52,27 @@ namespace Strazh.Analysis
         private static string GetFullName(this TypeInfo typeInfo)
             => typeInfo.Type.ContainingNamespace.ToString() + "." + GetName(typeInfo);
 
-        private static MethodNode CreateMethodNode(this IMethodSymbol symbol, TypeDeclarationSyntax declaration = null)
+        private static string GetNamespaceName(this INamespaceSymbol namespaceSymbol, string name)
         {
-            var fullName = symbol.ContainingSymbol.ToString() + '.' + symbol.Name;
-            var args = symbol.Parameters.Select(x => {
-                var type = x.Type.ToString();
-                return (name: x.Name, type);
-            }).ToArray();
-            return new MethodNode(fullName, symbol.Name, args, "unknown", declaration?.Modifiers.MapModifiers());
+            var nextName = namespaceSymbol?.Name;
+            if (string.IsNullOrEmpty(nextName))
+            {
+                return name;
+            }
+            return GetNamespaceName(namespaceSymbol.ContainingNamespace, $"{nextName}.{name}");
+        }
+
+        private static MethodNode CreateMethodNode(this IMethodSymbol symbol, MethodDeclarationSyntax declaration = null)
+        {
+            var temp = $"{symbol.ContainingType}.{symbol.Name}";
+            var fullName = symbol.ContainingNamespace.GetNamespaceName($"{symbol.ContainingType.Name}.{symbol.Name}");
+            var args = symbol.Parameters.Select(x => (name: x.Name, type: x.Type.ToString())).ToArray();
+            var returnType = symbol.ReturnType.ToString();
+            return new MethodNode(fullName, 
+                symbol.Name,
+                args,
+                returnType,
+                declaration?.Modifiers.MapModifiers());
         }
 
         private static string GetName(string filePath)
@@ -102,7 +115,8 @@ namespace Strazh.Analysis
         {
             var root = st.GetRoot();
             var filePath = root.SyntaxTree.FilePath;
-            filePath = filePath.Substring(filePath.IndexOf(rootFolder.Name));
+            var index = filePath.IndexOf(rootFolder.Name);
+            filePath = index < 0 ? filePath : filePath.Substring(index);
             var fileName = GetName(filePath);
             var fileNode = new FileNode(filePath, fileName);
             GetFolderChain(filePath, fileNode).ForEach(triples.Add);
@@ -158,7 +172,7 @@ namespace Strazh.Analysis
             var methods = declaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
             foreach (var method in methods)
             {
-                var methodNode = sem.GetDeclaredSymbol(method).CreateMethodNode(declaration);
+                var methodNode = sem.GetDeclaredSymbol(method).CreateMethodNode(method);
                 triples.Add(new TripleHave(node, methodNode));
 
                 foreach (var syntax in method.DescendantNodes().OfType<ExpressionSyntax>())

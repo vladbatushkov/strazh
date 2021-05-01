@@ -19,15 +19,20 @@ namespace Strazh
 #endif
             var rootCommand = new RootCommand();
 
-            var optionCredentials = new Option<string>("--credentials", "required flag of credentials as `dbname:user:password` to connect to Neo4j database");
+            var optionCredentials = new Option<string>("--credentials", "required information in format `dbname:user:password` to connect to Neo4j database");
             optionCredentials.AddAlias("-c");
             optionCredentials.IsRequired = true;
             rootCommand.Add(optionCredentials);
 
-            var optionMode = new Option<string>("--mode", "optional flag of mode as `code` or `structure` or no flag (mean both `code` and `structure`) to explicitly limited scan of codebase");
+            var optionMode = new Option<string>("--mode", "optional flag as `code` or `structure` or no flag (default both `code` and `structure`) to limit scan of codebase");
             optionMode.AddAlias("-m");
             optionMode.IsRequired = false;
             rootCommand.Add(optionMode);
+
+            var optionDelete = new Option<string>("--delete", "optional flag as `true` or `false` or no flag (default `true`) to delete existed graph data");
+            optionDelete.AddAlias("-d");
+            optionDelete.IsRequired = false;
+            rootCommand.Add(optionDelete);
 
             var optionSolution = new Option<string>("--solution", "optional absolute path to only one .sln file (can't be used together with -p / --projects)");
             optionSolution.AddAlias("-s");
@@ -39,17 +44,18 @@ namespace Strazh
             optionProjects.IsRequired = false;
             rootCommand.Add(optionProjects);
 
-            rootCommand.Handler = CommandHandler.Create<string, string, string, string[]>(BuildKnowledgeGraph);
+            rootCommand.Handler = CommandHandler.Create<string, string, string, string, string[]>(BuildKnowledgeGraph);
             await rootCommand.InvokeAsync(args);
         }
 
-        private static async Task BuildKnowledgeGraph(string credentials, string mode, string solution, string[] projects)
+        private static async Task BuildKnowledgeGraph(string credentials, string mode, string delete, string solution, string[] projects)
         {
             try
             {
                 var config = new AnalyzerConfig(
                        credentials,
                        mode,
+                       delete,
                        solution,
                        projects
                    );
