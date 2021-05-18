@@ -2,9 +2,9 @@ using System.Linq;
 
 namespace Strazh.Domain
 {
-    public class Node
+    public abstract class Node
     {
-        public virtual string Label { get; }
+        public abstract string Label { get; }
 
         public virtual string FullName { get; }
 
@@ -27,9 +27,6 @@ namespace Strazh.Domain
             Pk = FullName.GetHashCode().ToString();
         }
 
-        public string Match()
-            => $"pk: \"{Pk}\"";
-
         public virtual string Set(string node)
             => $"{node}.pk = \"{Pk}\", {node}.fullName = \"{FullName}\", {node}.name = \"{Name}\"";
     }
@@ -38,48 +35,55 @@ namespace Strazh.Domain
 
     public abstract class CodeNode : Node
     {
-        public CodeNode(string fullName, string name)
+        public CodeNode(string fullName, string name, string[] modifiers = null)
             : base(fullName, name)
         {
+
+            Modifiers = modifiers == null ? "" : string.Join(", ", modifiers);
         }
 
-        public CodeNode(string[] str, string fullName, string name)
-            : base(fullName, name)
+        public string Modifiers { get; }
+
+        public override string Set(string node)
+            => $"{base.Set(node)}{(string.IsNullOrEmpty(Modifiers) ? "" : $", {node}.modifiers = \"{Modifiers}\"")}";
+    }
+
+    public abstract class TypeNode : CodeNode
+    {
+        public TypeNode(string fullName, string name, string[] modifiers = null)
+            : base(fullName, name, modifiers)
         {
         }
     }
 
-    public class ClassNode : CodeNode
+    public class ClassNode : TypeNode
     {
-        public ClassNode(string fullName, string name, bool isStatic)
-            : base(fullName, name)
+        public ClassNode(string fullName, string name, string[] modifiers = null)
+            : base(fullName, name, modifiers)
         {
-            IsStatic = isStatic;
         }
 
         public override string Label { get; } = "Class";
-
-        public bool IsStatic { get; }
-
-        public override string Set(string node)
-            => $"{base.Set(node)}, {node}.isStatic = {IsStatic}";
     }
 
-    public class InterfaceNode : CodeNode
+    public class InterfaceNode : TypeNode
     {
-        public InterfaceNode(string fullName, string name)
-            : base(fullName, name) { }
+        public InterfaceNode(string fullName, string name, string[] modifiers = null)
+            : base(fullName, name, modifiers)
+        {
+        }
 
         public override string Label { get; } = "Interface";
     }
 
     public class MethodNode : CodeNode
     {
-        public MethodNode(string fullName, string name, (string name, string type)[] args, string returnType)
-            : base(fullName, name)
+        public MethodNode(string fullName, string name, (string name, string type)[] args, string returnType, string[] modifiers = null)
+            : base(fullName, name, modifiers)
         {
-            Arguments = args.Aggregate("", (a, x) => $"{a}{x.name}: {x.type}, ");
+            Arguments = string.Join(", ", args.Select(x => $"{x.type} {x.name}"));
             ReturnType = returnType;
+            SetPrimaryKey();
         }
 
         public override string Label { get; } = "Method";
@@ -99,15 +103,7 @@ namespace Strazh.Domain
 
     // Structure
 
-    public abstract class StructureNode : Node
-    {
-        public StructureNode(string fullName, string name)
-            : base(fullName, name)
-        {
-        }
-    }
-
-    public class FileNode : StructureNode
+    public class FileNode : Node
     {
         public FileNode(string fullName, string name)
             : base(fullName, name) { }
@@ -115,7 +111,7 @@ namespace Strazh.Domain
         public override string Label { get; } = "File";
     }
 
-    public class FolderNode : StructureNode
+    public class FolderNode : Node
     {
         public FolderNode(string fullName, string name)
             : base(fullName, name) { }
@@ -123,7 +119,7 @@ namespace Strazh.Domain
         public override string Label { get; } = "Folder";
     }
 
-    public class ProjectNode : StructureNode
+    public class ProjectNode : Node
     {
         public ProjectNode(string name)
             : this(name, name) { }
@@ -134,12 +130,13 @@ namespace Strazh.Domain
         public override string Label { get; } = "Project";
     }
 
-    public class PackageNode : StructureNode
+    public class PackageNode : Node
     {
         public PackageNode(string fullName, string name, string version)
             : base(fullName, name)
         {
             Version = version;
+            SetPrimaryKey();
         }
 
         public override string Label { get; } = "Package";

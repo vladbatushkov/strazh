@@ -1,10 +1,8 @@
 ﻿using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.Linq;
 using System.Threading.Tasks;
 using Strazh.Analysis;
-using Strazh.Database;
 
 namespace Strazh
 {
@@ -21,41 +19,60 @@ namespace Strazh
 #endif
             var rootCommand = new RootCommand();
 
-            var optionCred = new Option<string>("--credentials", "credentials as `dbname:user:password` to connect to Neo4j batabase");
-            optionCred.AddAlias("-cs");
-            optionCred.IsRequired = true;
-            rootCommand.Add(optionCred);
+            var optionCredentials = new Option<string>("--credentials", "required information in format `dbname:user:password` to connect to Neo4j Database");
+            optionCredentials.AddAlias("-c");
+            optionCredentials.IsRequired = true;
+            rootCommand.Add(optionCredentials);
 
-            var optionPath = new Option<string[]>("--pathlist", "list of absolute path to .csproj files");
-            optionPath.AddAlias("-pl");
-            optionPath.IsRequired = true;
-            rootCommand.Add(optionPath);
+            var optionMode = new Option<string>("--tier", "optional flag as `project` or `code` or 'all' (default `all`) selected tier to scan in a codebase");
+            optionMode.AddAlias("-t");
+            optionMode.IsRequired = false;
+            rootCommand.Add(optionMode);
 
-            rootCommand.Handler = CommandHandler.Create<string, string[]>(BuildKnowledgeGraph);
+            var optionDelete = new Option<string>("--delete", "optional flag as `true` or `false` or no flag (default `true`) to delete data in graph before execution");
+            optionDelete.AddAlias("-d");
+            optionDelete.IsRequired = false;
+            rootCommand.Add(optionDelete);
+
+            var optionSolution = new Option<string>("--solution", "optional absolute path to only one `.sln` file (can't be used together with -p / --projects)");
+            optionSolution.AddAlias("-s");
+            optionSolution.IsRequired = false;
+            rootCommand.Add(optionSolution);
+
+            var optionProjects = new Option<string[]>("--projects", "optional list of absolute path to one or many `.csproj` files (can't be used together with -s / --solution)");
+            optionProjects.AddAlias("-p");
+            optionProjects.IsRequired = false;
+            rootCommand.Add(optionProjects);
+
+            rootCommand.Handler = CommandHandler.Create<string, string, string, string, string[]>(BuildKnowledgeGraph);
             await rootCommand.InvokeAsync(args);
         }
 
-        private static async Task BuildKnowledgeGraph(string credentials, string[] pathlist)
+        private static async Task BuildKnowledgeGraph(string credentials, string tier, string delete, string solution, string[] projects)
         {
             try
             {
+                var config = new AnalyzerConfig(
+                       credentials,
+                       tier,
+                       delete,
+                       solution,
+                       projects
+                   );
+                if (!config.IsValid)
+                {
+                    Console.WriteLine("Please submit only one thing: `--solution` (-s) or `--projects` (-p)");
+                    return;
+                }
                 var isNeo4jReady = await Healthcheck.IsNeo4jReady();
                 if (!isNeo4jReady)
                 {
-                    Console.WriteLine("Strazh disappointed. There is no Neo4j instance ready to use.");
+                    Console.WriteLine("Strazh failed to start. There is no Neo4j instance ready to use.");
                     return;
                 }
-                Console.WriteLine("Brewing the Code Knowledge Graph.");
-                var isOverride = true;
-                foreach (var path in pathlist)
-                {
-                    var triples = await Analyzer.Analyze(path);
-                    if (triples.Length > 0)
-                    {
-                        await DbManager.InsertData(triples, credentials, isOverride);
-                    }
-                    isOverride = false;
-                }
+
+                Console.WriteLine($"Brewing a Code Knowledge Graph of tier \"{config.Tier}\".");                
+                await Analyzer.Analyze(config);
                 Console.WriteLine("Code Knowledge Graph created.");
             }
             catch (Exception ex)
