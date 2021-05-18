@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System;
 using Strazh.Database;
 using static Strazh.Analysis.AnalyzerConfig;
+using System.IO;
 
 namespace Strazh.Analysis
 {
@@ -33,7 +34,7 @@ namespace Strazh.Analysis
             short index = 1;
             foreach (var projectAnalyzer in projectAnalyzers)
             {
-                var triples = await AnalyzeProject(index, workspace, projectAnalyzer, config.Mode);
+                var triples = await AnalyzeProject(index, workspace, projectAnalyzer, config.Tier);
                 if (triples.Count > 0)
                 {
                     await DbManager.InsertData(triples, config.Credentials, isDelete);
@@ -44,7 +45,7 @@ namespace Strazh.Analysis
             workspace.Dispose();
         }
 
-        private static async Task<IList<Triple>> AnalyzeProject(short index, AdhocWorkspace workspace, IProjectAnalyzer projectAnalyzer, AnalyzeMode mode)
+        private static async Task<IList<Triple>> AnalyzeProject(short index, AdhocWorkspace workspace, IProjectAnalyzer projectAnalyzer, Tiers mode)
         {
             Console.WriteLine($"Project #{index}:");
             var project = projectAnalyzer.AddToWorkspace(workspace);
@@ -54,9 +55,9 @@ namespace Strazh.Analysis
             Console.WriteLine($"Analyzing {projectName} project...");
 
             var triples = new List<Triple>();
-            if (mode == AnalyzeMode.All || mode == AnalyzeMode.Structure)
+            if (mode == Tiers.All || mode == Tiers.Project)
             {
-                Console.WriteLine($"Analyzing Structure level...");
+                Console.WriteLine($"Analyzing Project tier...");
                 var projectBuild = projectAnalyzer.Build().FirstOrDefault();
                 var projectNode = new ProjectNode(projectName);
                 triples.Add(new TripleIncludedIn(projectNode, rootNode));
@@ -71,13 +72,13 @@ namespace Strazh.Analysis
                     var node = new PackageNode(x.Key, x.Key, version);
                     triples.Add(new TripleDependsOnPackage(projectNode, node));
                 });
-                Console.WriteLine($"Analyzing Structure level complete.");
+                Console.WriteLine($"Analyzing Project tier complete.");
             }
 
             if (project.SupportsCompilation
-                && (mode == AnalyzeMode.All || mode == AnalyzeMode.Code))
+                && (mode == Tiers.All || mode == Tiers.Code))
             {
-                Console.WriteLine($"Analyzing Code level...");
+                Console.WriteLine($"Analyzing Code tier...");
                 var compilation = await project.GetCompilationAsync();
                 var syntaxTreeRoot = compilation.SyntaxTrees;
                 foreach (var st in syntaxTreeRoot)
@@ -86,7 +87,7 @@ namespace Strazh.Analysis
                     Extractor.AnalyzeTree<ClassDeclarationSyntax>(triples, st, sem, rootNode);
                     Extractor.AnalyzeTree<InterfaceDeclarationSyntax>(triples, st, sem, rootNode);
                 }
-                Console.WriteLine($"Analyzing Code level complete.");
+                Console.WriteLine($"Analyzing Code tier complete.");
                 triples = triples.GroupBy(x => x.ToString()).Select(x => x.First()).ToList();
             }
 
@@ -95,9 +96,9 @@ namespace Strazh.Analysis
         }
 
         private static string GetProjectName(string fullName)
-            => fullName.Split('\\').Last().Replace(".csproj", "");
+            => fullName.Split(Path.DirectorySeparatorChar).Last().Replace(".csproj", "");
 
         private static string GetRoot(string filePath)
-            => filePath.Split("\\").Reverse().Skip(1).FirstOrDefault();
+            => filePath.Split(Path.DirectorySeparatorChar).Reverse().Skip(1).FirstOrDefault();
     }
 }

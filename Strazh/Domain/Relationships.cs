@@ -2,7 +2,7 @@ namespace Strazh.Domain
 {
     public abstract class Relationship
     {
-        public virtual string Type { get; }
+        public abstract string Type { get; }
     }
 
     public class HaveRelationship : Relationship

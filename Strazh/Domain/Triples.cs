@@ -16,7 +16,7 @@ namespace Strazh.Domain
         }
 
         public override string ToString()
-            => $"MERGE (a:{NodeA.Label} {{ {NodeA.Match()} }}) ON CREATE SET {NodeA.Set("a")} ON MATCH SET {NodeA.Set("a")} MERGE (b:{NodeB.Label} {{ {NodeB.Match()} }}) ON CREATE SET {NodeB.Set("b")} ON MATCH SET {NodeB.Set("b")} MERGE (a)-[:{Relationship.Type}]->(b);";
+            => $"MERGE (a:{NodeA.Label} {{ pk: \"{NodeA.Pk}\" }}) ON CREATE SET {NodeA.Set("a")} ON MATCH SET {NodeA.Set("a")} MERGE (b:{NodeB.Label} {{ pk: \"{NodeB.Pk}\" }}) ON CREATE SET {NodeB.Set("b")} ON MATCH SET {NodeB.Set("b")} MERGE (a)-[:{Relationship.Type}]->(b);";
     }
 
     // Structure
@@ -63,9 +63,9 @@ namespace Strazh.Domain
     public class TripleDeclaredAt : Triple
     {
         public TripleDeclaredAt(
-            CodeNode codeA,
+            TypeNode typeA,
             FileNode fileB)
-            : base(codeA, fileB, new DeclaredAtRelationship())
+            : base(typeA, fileB, new DeclaredAtRelationship())
         { }
     }
 
@@ -80,49 +80,22 @@ namespace Strazh.Domain
         { }
     }
 
-    public class TripleInvokeAsClass : Triple
-    {
-        public TripleInvokeAsClass(
-            MethodNode methodA,
-            ClassNode classB)
-            : base(methodA, classB, new InvokeRelationship())
-        { }
-    }
-
     public class TripleHave : Triple
     {
         public TripleHave(
-            Node nodeA,
+            TypeNode typeA,
             MethodNode methodB)
-            : base(nodeA, methodB, new HaveRelationship())
-        { }
-    }
-
-    public class TripleClassHave : Triple
-    {
-        public TripleClassHave(
-            ClassNode classA,
-            MethodNode methodB)
-            : base(classA, methodB, new HaveRelationship())
-        { }
-    }
-
-    public class TripleInterfaceHave : Triple
-    {
-        public TripleInterfaceHave(
-            InterfaceNode interfaceA,
-            MethodNode methodB)
-            : base(interfaceA, methodB, new HaveRelationship())
+            : base(typeA, methodB, new HaveRelationship())
         { }
     }
 
     public class TripleConstruct : Triple
     {
-        public TripleConstruct(
-            ClassNode classA,
-            ClassNode classB)
-            : base(classA, classB, new ConstructRelationship())
-        { }
+        //public TripleConstruct(
+        //    ClassNode classA,
+        //    ClassNode classB)
+        //    : base(classA, classB, new ConstructRelationship())
+        //{ }
 
         public TripleConstruct(
             MethodNode methodA,
@@ -131,12 +104,18 @@ namespace Strazh.Domain
         { }
     }
 
-    public class TripleInherit : Triple
+    public class TripleOfType : Triple
     {
-        public TripleInherit(
-            Node nodeA,
-            Node nodeB)
-            : base(nodeA, nodeB, new OfTypeRelationship())
+        public TripleOfType(
+            ClassNode classA,
+            TypeNode typeB)
+            : base(classA, typeB, new OfTypeRelationship())
+        { }
+
+        public TripleOfType(
+            InterfaceNode interfaceA,
+            InterfaceNode interfaceB)
+            : base(interfaceA, interfaceB, new OfTypeRelationship())
         { }
     }
 }

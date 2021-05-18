@@ -4,12 +4,13 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Collections.Generic;
 using Strazh.Domain;
+using System.IO;
 
 namespace Strazh.Analysis
 {
     public static class Extractor
     {
-        private static CodeNode CreateNode(this ISymbol symbol, TypeDeclarationSyntax declaration)
+        private static TypeNode CreateTypeNode(this ISymbol symbol, TypeDeclarationSyntax declaration)
         {
             (string fullName, string name) = (symbol.ContainingNamespace.ToString() + '.' + symbol.Name, symbol.Name);
             switch (declaration)
@@ -31,7 +32,7 @@ namespace Strazh.Analysis
         private static string[] MapModifiers(this SyntaxTokenList syntaxTokens)
             => syntaxTokens.Select(x => x.ValueText).ToArray();
 
-        private static Node CreateNode(this TypeInfo typeInfo)
+        private static TypeNode CreateTypeNode(this TypeInfo typeInfo)
         {
             switch (typeInfo.ConvertedType.TypeKind)
             {
@@ -68,7 +69,7 @@ namespace Strazh.Analysis
             var fullName = symbol.ContainingNamespace.GetNamespaceName($"{symbol.ContainingType.Name}.{symbol.Name}");
             var args = symbol.Parameters.Select(x => (name: x.Name, type: x.Type.ToString())).ToArray();
             var returnType = symbol.ReturnType.ToString();
-            return new MethodNode(fullName, 
+            return new MethodNode(fullName,
                 symbol.Name,
                 args,
                 returnType,
@@ -76,12 +77,12 @@ namespace Strazh.Analysis
         }
 
         private static string GetName(string filePath)
-            => filePath.Split("\\").Reverse().FirstOrDefault();
+            => filePath.Split(Path.DirectorySeparatorChar).Reverse().FirstOrDefault();
 
         private static List<TripleIncludedIn> GetFolderChain(string filePath, FileNode file)
         {
             var triples = new List<TripleIncludedIn>();
-            var chain = filePath.Split("\\");
+            var chain = filePath.Split(Path.DirectorySeparatorChar);
             FolderNode prev = null;
             var path = string.Empty;
             foreach (var item in chain)
@@ -99,7 +100,7 @@ namespace Strazh.Analysis
                 }
                 else
                 {
-                    path = $"{path}\\{item}";
+                    path = Path.DirectorySeparatorChar == '/' ? $"{path}/{item}" : $"{path}\\{item}";
                     triples.Add(new TripleIncludedIn(new FolderNode(path, item), new FolderNode(prev.FullName, prev.Name)));
                     prev = new FolderNode(path, item);
                 }
@@ -116,14 +117,14 @@ namespace Strazh.Analysis
             var root = st.GetRoot();
             var filePath = root.SyntaxTree.FilePath;
             var index = filePath.IndexOf(rootFolder.Name);
-            filePath = index < 0 ? filePath : filePath.Substring(index);
+            filePath = index < 0 ? filePath : filePath[index..];
             var fileName = GetName(filePath);
             var fileNode = new FileNode(filePath, fileName);
             GetFolderChain(filePath, fileNode).ForEach(triples.Add);
             var declarations = root.DescendantNodes().OfType<T>();
             foreach (var declaration in declarations)
             {
-                var node = sem.GetDeclaredSymbol(declaration).CreateNode(declaration);
+                var node = sem.GetDeclaredSymbol(declaration).CreateTypeNode(declaration);
                 if (node != null)
                 {
                     triples.Add(new TripleDeclaredAt(node, fileNode));
@@ -136,29 +137,33 @@ namespace Strazh.Analysis
         /// <summary>
         /// Member (field, property) initialization
         /// </summary>
-        public static void GetConstructsWithinClass(IList<Triple> triples, ClassDeclarationSyntax declaration, SemanticModel sem, ClassNode classNode)
-        {
-            var creates = declaration.DescendantNodes().OfType<ObjectCreationExpressionSyntax>();
-            foreach (var creation in creates)
-            {
-                var node = sem.GetTypeInfo(creation).CreateClassNode();
-                triples.Add(new TripleConstruct(classNode, node));
-            }
-        }
+        //public static void GetConstructsWithinClass(IList<Triple> triples, ClassDeclarationSyntax declaration, SemanticModel sem, ClassNode classNode)
+        //{
+        //    var creates = declaration.DescendantNodes().OfType<ObjectCreationExpressionSyntax>();
+        //    foreach (var creation in creates)
+        //    {
+        //        var node = sem.GetTypeInfo(creation).CreateClassNode();
+        //        triples.Add(new TripleConstruct(classNode, node));
+        //    }
+        //}
 
         /// <summary>
         /// Type inherited from BaseType
         /// </summary>
-        public static void GetInherits(IList<Triple> triples, TypeDeclarationSyntax declaration, SemanticModel sem, Node node)
+        public static void GetInherits(IList<Triple> triples, TypeDeclarationSyntax declaration, SemanticModel sem, TypeNode node)
         {
             if (declaration.BaseList != null)
             {
                 foreach (var baseTypeSyntax in declaration.BaseList.Types)
                 {
-                    var parentNode = sem.GetTypeInfo(baseTypeSyntax.Type).CreateNode();
-                    if (parentNode != null)
+                    var parentNode = sem.GetTypeInfo(baseTypeSyntax.Type).CreateTypeNode();
+                    if (node is ClassNode classNode)
                     {
-                        triples.Add(new TripleInherit(node, parentNode));
+                        triples.Add(new TripleOfType(classNode, parentNode));
+                    }
+                    if (node is InterfaceNode interfaceNode && parentNode is InterfaceNode parentInterfaceNode)
+                    {
+                        triples.Add(new TripleOfType(interfaceNode, parentInterfaceNode));
                     }
                 }
             }
@@ -167,7 +172,7 @@ namespace Strazh.Analysis
         /// <summary>
         /// Class or Interface have some method AND some method can call another method AND some method can creates an object of class
         /// </summary>
-        public static void GetMethodsAll(IList<Triple> triples, TypeDeclarationSyntax declaration, SemanticModel sem, Node node)
+        public static void GetMethodsAll(IList<Triple> triples, TypeDeclarationSyntax declaration, SemanticModel sem, TypeNode node)
         {
             var methods = declaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
             foreach (var method in methods)
@@ -185,8 +190,7 @@ namespace Strazh.Analysis
                             break;
 
                         case InvocationExpressionSyntax invocation:
-                            var invokedSymbol = sem.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
-                            if (invokedSymbol != null)
+                            if (sem.GetSymbolInfo(invocation).Symbol is IMethodSymbol invokedSymbol)
                             {
                                 var invokedMethod = invokedSymbol.CreateMethodNode();
                                 triples.Add(new TripleInvoke(methodNode, invokedMethod));

@@ -23,15 +23,15 @@
             }
         }
 
-        public enum AnalyzeMode : int
+        public enum Tiers : int
         {
             All = 0,
-            Structure = 1,
+            Project = 1,
             Code = 2
         }
 
         public CredentialsConfig Credentials { get; }
-        public AnalyzeMode Mode { get; }
+        public Tiers Tier { get; }
         public string Solution { get; }
         public string[] Projects { get; }
         public bool IsDelete { get; }
@@ -41,22 +41,22 @@
         public bool IsValid => (!string.IsNullOrEmpty(Solution) && Projects.Length == 0)
             || (string.IsNullOrEmpty(Solution) && Projects.Length > 0);
 
-        public AnalyzerConfig(string credentials, string mode, string delete, string solution, string[] projects)
+        public AnalyzerConfig(string credentials, string tier, string delete, string solution, string[] projects)
         {
             solution = solution == "none" ? "" : solution;
             Credentials = new CredentialsConfig(credentials);
-            Mode = MapMode(mode);
+            Tier = MapTier(tier);
             IsDelete = delete != "false";
             Solution = solution;
             Projects = projects ?? new string[] { };
         }
 
-        private AnalyzeMode MapMode(string mode)
+        private Tiers MapTier(string mode)
             => (mode ?? "").ToLowerInvariant() switch
                 {
-                    "structure" => AnalyzeMode.Structure,
-                    "code" => AnalyzeMode.Code,
-                    _ => AnalyzeMode.All,
+                    "project" => Tiers.Project,
+                    "code" => Tiers.Code,
+                    _ => Tiers.All,
                 };
     }
 }

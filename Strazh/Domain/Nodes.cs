@@ -4,7 +4,7 @@ namespace Strazh.Domain
 {
     public abstract class Node
     {
-        public virtual string Label { get; }
+        public abstract string Label { get; }
 
         public virtual string FullName { get; }
 
@@ -27,9 +27,6 @@ namespace Strazh.Domain
             Pk = FullName.GetHashCode().ToString();
         }
 
-        public string Match()
-            => $"pk: \"{Pk}\"";
-
         public virtual string Set(string node)
             => $"{node}.pk = \"{Pk}\", {node}.fullName = \"{FullName}\", {node}.name = \"{Name}\"";
     }
@@ -51,7 +48,15 @@ namespace Strazh.Domain
             => $"{base.Set(node)}{(string.IsNullOrEmpty(Modifiers) ? "" : $", {node}.modifiers = \"{Modifiers}\"")}";
     }
 
-    public class ClassNode : CodeNode
+    public abstract class TypeNode : CodeNode
+    {
+        public TypeNode(string fullName, string name, string[] modifiers = null)
+            : base(fullName, name, modifiers)
+        {
+        }
+    }
+
+    public class ClassNode : TypeNode
     {
         public ClassNode(string fullName, string name, string[] modifiers = null)
             : base(fullName, name, modifiers)
@@ -61,7 +66,7 @@ namespace Strazh.Domain
         public override string Label { get; } = "Class";
     }
 
-    public class InterfaceNode : CodeNode
+    public class InterfaceNode : TypeNode
     {
         public InterfaceNode(string fullName, string name, string[] modifiers = null)
             : base(fullName, name, modifiers)
