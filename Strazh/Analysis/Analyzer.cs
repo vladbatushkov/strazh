@@ -80,7 +80,7 @@ namespace Strazh.Analysis
             {
                 Console.WriteLine($"Analyzing Code tier...");
                 var compilation = await project.GetCompilationAsync();
-                var syntaxTreeRoot = compilation.SyntaxTrees;
+                var syntaxTreeRoot = compilation.SyntaxTrees.Where(x => !x.FilePath.Contains("obj"));
                 foreach (var st in syntaxTreeRoot)
                 {
                     var sem = compilation.GetSemanticModel(st);

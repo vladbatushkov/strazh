@@ -7,8 +7,8 @@ services:
     container_name: strazh
     network_mode: host
     volumes:
-      - C:\src\agoda-front-end\cronos\framework\src\Agoda.Cronos.Bootstrap:/dest1
-      - C:\src\agoda-front-end\cronos\framework\src\Tests\Agoda.Cronos.BootstrapUnitTests:/dest2
+      - C:\src\github\strazh\SystemUnderTest\Strazh.Tests.ProjectA:/dest1
+      - C:\src\github\strazh\SystemUnderTest\Strazh.Tests.ProjectB:/dest2
     environment:
       - c=neo4j:neo4j:strazh
-      - p=/dest1/Agoda.Cronos.Bootstrap.csproj /dest2/Agoda.Cronos.BootstrapUnitTests.csproj
+      - p=/dest2/Strazh.Tests.ProjectB.csproj /dest1/Strazh.Tests.ProjectA.csproj
