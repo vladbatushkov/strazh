@@ -7,8 +7,7 @@ services:
     container_name: strazh
     network_mode: host
     volumes:
-      - C:\src\github\strazh\SystemUnderTest\Strazh.Tests.ProjectA:/dest1
-      - C:\src\github\strazh\SystemUnderTest\Strazh.Tests.ProjectB:/dest2
+      - C:\src\github\strazh\SystemUnderTest:/dest
     environment:
       - c=neo4j:neo4j:strazh
-      - p=/dest2/Strazh.Tests.ProjectB.csproj /dest1/Strazh.Tests.ProjectA.csproj
+      - p=/dest/Strazh.Tests.ProjectB/Strazh.Tests.ProjectB.csproj /dest/Strazh.Tests.ProjectA/Strazh.Tests.ProjectA.csproj
