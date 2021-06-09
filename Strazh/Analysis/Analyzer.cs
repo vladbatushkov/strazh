@@ -30,35 +30,37 @@ namespace Strazh.Analysis
             Console.WriteLine($"Analyzer ready to analyze {projectAnalyzers.Count()} project/s.");
 
             var workspace = new AdhocWorkspace();
-            var isDelete = config.IsDelete;
-            short index = 1;
-            foreach (var projectAnalyzer in projectAnalyzers)
+            var projects = new List<(Project, IProjectAnalyzer)>();
+
+            var sortedProjectAnalyzers = projectAnalyzers; // TODO sort
+
+            foreach (var projectAnalyzer in sortedProjectAnalyzers)
             {
-                var triples = await AnalyzeProject(index, workspace, projectAnalyzer, config.Tier);
-                if (triples.Count > 0)
-                {
-                    await DbManager.InsertData(triples, config.Credentials, isDelete);
-                }
-                index++;
-                isDelete = false;
+                var project = projectAnalyzer.AddToWorkspace(workspace);
+                projects.Add((project, projectAnalyzer));
+            }
+            for (var index = 0; index < projects.Count; index++)
+            {
+                var triples = await AnalyzeProject(index + 1, projects[index], config.Tier);
+                triples = triples.GroupBy(x => x.ToString()).Select(x => x.First()).OrderBy(x => x.NodeA.Label).ToList();
+                await DbManager.InsertData(triples, config.Credentials, config.IsDelete && index == 0);
             }
             workspace.Dispose();
         }
 
-        private static async Task<IList<Triple>> AnalyzeProject(short index, AdhocWorkspace workspace, IProjectAnalyzer projectAnalyzer, Tiers mode)
+        private static async Task<IList<Triple>> AnalyzeProject(int index, (Project project, IProjectAnalyzer projectAnalyzer) item, Tiers mode)
         {
             Console.WriteLine($"Project #{index}:");
-            var project = projectAnalyzer.AddToWorkspace(workspace);
-            var root = GetRoot(project.FilePath);
+            var root = GetRoot(item.project.FilePath);
             var rootNode = new FolderNode(root, root);
-            var projectName = GetProjectName(project.Name);
+            var projectName = GetProjectName(item.project.Name);
             Console.WriteLine($"Analyzing {projectName} project...");
 
             var triples = new List<Triple>();
             if (mode == Tiers.All || mode == Tiers.Project)
             {
                 Console.WriteLine($"Analyzing Project tier...");
-                var projectBuild = projectAnalyzer.Build().FirstOrDefault();
+                var projectBuild = item.projectAnalyzer.Build().FirstOrDefault();
                 var projectNode = new ProjectNode(projectName);
                 triples.Add(new TripleIncludedIn(projectNode, rootNode));
                 projectBuild.ProjectReferences.ToList().ForEach(x =>
@@ -75,20 +77,19 @@ namespace Strazh.Analysis
                 Console.WriteLine($"Analyzing Project tier complete.");
             }
 
-            if (project.SupportsCompilation
+            if (item.project.SupportsCompilation
                 && (mode == Tiers.All || mode == Tiers.Code))
             {
                 Console.WriteLine($"Analyzing Code tier...");
-                var compilation = await project.GetCompilationAsync();
-                var syntaxTreeRoot = compilation.SyntaxTrees;
+                var compilation = await item.project.GetCompilationAsync();
+                var syntaxTreeRoot = compilation.SyntaxTrees.Where(x => !x.FilePath.Contains("obj"));
                 foreach (var st in syntaxTreeRoot)
                 {
                     var sem = compilation.GetSemanticModel(st);
-                    Extractor.AnalyzeTree<ClassDeclarationSyntax>(triples, st, sem, rootNode);
                     Extractor.AnalyzeTree<InterfaceDeclarationSyntax>(triples, st, sem, rootNode);
+                    Extractor.AnalyzeTree<ClassDeclarationSyntax>(triples, st, sem, rootNode);
                 }
                 Console.WriteLine($"Analyzing Code tier complete.");
-                triples = triples.GroupBy(x => x.ToString()).Select(x => x.First()).ToList();
             }
 
             Console.WriteLine($"Analyzing {projectName} project complete.");
