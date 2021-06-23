@@ -1,64 +1,68 @@
-# strazh
-Your code - is your Knowledge Graph.
+# Strazh
+Your codebase - is your Knowledge Graph.
 
-__WIP__
+### Manual run
 
-Release plan:
+##### Prerequisite
 
-- 1.0.0-alpha
-- 1.0.0-alpha.1..N <-- HERE NOW
-- 1.0.0-beta
-- 1.0.0-beta.1..N
-- 1.0.0
+Run Neo4j on your local (for example, using docker)
 
-### local
+```
+docker run \
+    --name strazh_neo4j \
+    -p7474:7474 -p7687:7687 \
+    -d \
+    --env NEO4J_AUTH=neo4j/strazh \
+    neo4j:latest
+```
 
-Build `strazh` from repository root:
+##### Build Strazh
+
+Do fork & clone repository
+
 ```
 dotnet build ./Strazh/Strazh.csproj -c Release -o /app
 ```
-Run `strazh` to analyze `Strazh.csproj`:
+
+##### Run Strazh
+
 ```
 dotnet ./app/Strazh.dll -c neo4j:neo4j:strazh -p ./Strazh/Strazh.csproj
 ```
 
-### docker
+We point Strazh to build a Codebase Knowledge Graph of Strazh codebase :-)
 
-In case you want to create a local `strazh:dev` image:
-
-```
-docker build . -t strazh:dev
-```
-
-Example how to run created `strazh:dev` container against the `Strazh.csproj` project (strazh can explore strazh codebase O_o )
+#### cli
 
 ```
-docker run -it --rm --network=host -v $(pwd)/Strazh:/dest -e c=neo4j:neo4j:strazh -e p=/dest/Strazh.csproj strazh:dev
+Usage:
+  strazh [options]
+Options:
+  -c, --credentials (REQUIRED)
+required information in format `dbname:user:password` to connect to Neo4j Database
+  -t, --tier
+optional flag as `project` or `code` or 'all' (default `all`) selected tier to scan in a codebase
+  -d, --delete
+optional flag as `true` or `false` or no flag (default `true`) to delete data in graph before execution
+  -s, --solution (REQUIRED)
+optional absolute path to only one `.sln` file (can't be used together with -p / --projects)
+  -p, --projects (REQUIRED)
+optional list of absolute path to one or many `.csproj` files (can't be used together with -s / --solution)
+  --version                                     
+show version information
+  -?, -h, --help                                
+show help and usage information
 ```
 
-Run with cli from `Strazh` folder: `dotnet Strazh.dll -c neo4j:neo4j:strazh -p ../../../Strazh.csproj`
+### Run with docker-compose
 
-Run using `dotnet run` from `Strazh` folder:
-```
-dotnet run -c "neo4j:neo4j:strazh" -p "./Strazh.csproj"
-```
-
-- docker volume used to map folder `/Strazh` to folder `/dest` inside docker.
-- environment value `c` used to connect to Neo4j with `database:user:password` credentials.
-- environment value `m` used to point to mode of analysis used for run.
-- environment value `s` used to point to solution file inside docker container.
-- environment value `p` used to point to project files inside docker container.
-
-**docker-compose.yml**
-
-Another one option to build and run `strazh` is to use next `docker-compose` config:
 ```
 version: '3'
 services:
 
   strazh:
     build: .
-    image: vladbatushkov/strazh:1.0.0-alpha.3
+    image: strazh:dev
     container_name: strazh
     network_mode: host
     volumes:
@@ -70,7 +74,7 @@ services:
       - neo4j
 
   neo4j:
-    image: neo4j:4.2
+    image: neo4j:latest
     container_name: strazh_neo4j
     restart: unless-stopped
     ports:
@@ -82,3 +86,8 @@ services:
       NEO4J_dbms.memory.heap.initial_size: 1G
       NEO4J_dbms_memory_heap_max__size: 1G
 ``` 
+
+You can also use a `latest` image instead
+```
+image: vladbatushkov/strazh:latest
+```
