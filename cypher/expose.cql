@@ -11,14 +11,14 @@ AND n.modifiers =~ ".*public.*"
 RETURN labels(n)[0] as name, n.modifiers as modifier, count(n) as count
 
 MATCH (n)-[:DECLARED_AT]->(:File)-[:INCLUDED_IN*]->(:Folder)<-[:INCLUDED_IN]-(p:Project)
-WHERE p.name = "Agoda.Cronos.Bootstrap"
+WHERE p.name = "a"
 AND (n:Class OR n:Interface)
 AND n.modifiers =~ ".*public.*"
 RETURN labels(n)[0] as name, count(n) as count
 
 MATCH (m:Method)<-[:HAVE]-(c:Class)-[:DECLARED_AT]->(f:File)
-WHERE f.fullName =~ "Agoda.Cronos.Bootstrap.*"
-AND NOT f.fullName =~ "Agoda.Cronos.BootstrapUnitTests.*"
+WHERE f.fullName =~ "a"
+AND NOT f.fullName =~ "b"
 AND m.modifiers =~ ".*public.*"
 AND c.modifiers =~ ".*public.*"
 RETURN labels(m)[0] as name,
