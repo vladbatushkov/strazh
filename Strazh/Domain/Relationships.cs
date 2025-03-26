@@ -41,4 +41,9 @@ namespace Strazh.Domain
     {
         public override string Type => "DEPENDS_ON";
     }
+
+    public class ContainsRelationship : Relationship
+    {
+        public override string Type => "CONTAINS";
+    }
 }

@@ -45,6 +45,13 @@ namespace Strazh.Domain
     public class TripleIncludedIn : Triple
     {
         public TripleIncludedIn(
+            SolutionNode solution,
+            FolderNode folder)
+            : base(solution, folder, new IncludedInRelationship())
+        {
+        }
+
+        public TripleIncludedIn(
             ProjectNode contentA,
             FolderNode contentB)
             : base(contentA, contentB, new IncludedInRelationship())
@@ -61,6 +68,17 @@ namespace Strazh.Domain
             FolderNode contentB)
             : base(contentA, contentB, new IncludedInRelationship())
         { }
+
+    }
+    
+    public class TripleContains : Triple
+    {
+        public TripleContains(
+            SolutionNode solution,
+            ProjectNode project)
+            : base(solution, project, new ContainsRelationship())
+        {
+        }
     }
 
     public class TripleDeclaredAt : Triple
@@ -94,12 +112,6 @@ namespace Strazh.Domain
 
     public class TripleConstruct : Triple
     {
-        //public TripleConstruct(
-        //    ClassNode classA,
-        //    ClassNode classB)
-        //    : base(classA, classB, new ConstructRelationship())
-        //{ }
-
         public TripleConstruct(
             MethodNode methodA,
             ClassNode classB)
