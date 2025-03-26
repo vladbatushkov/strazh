@@ -1,9 +1,11 @@
-FROM mcr.microsoft.com/dotnet/sdk:3.1-alpine AS sdk
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS sdk
+RUN mkdir -p /src/Stahz
 WORKDIR /src
 COPY Strazh/Strazh.csproj Strazh/Strazh.csproj
 RUN dotnet restore /src/Strazh/Strazh.csproj
 
 FROM sdk as build
+RUN mkdir -p src
 WORKDIR /src
 COPY Strazh Strazh/
 RUN dotnet build /src/Strazh/Strazh.csproj -c Release -o /app
