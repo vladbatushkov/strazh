@@ -2,7 +2,7 @@ using System.Linq;
 
 namespace Strazh.Domain
 {
-    public abstract class Node
+    public abstract class Node : IInspectable
     {
         public abstract string Label { get; }
 
@@ -27,8 +27,11 @@ namespace Strazh.Domain
             Pk = FullName.GetHashCode().ToString();
         }
 
-        public virtual string Set(string node)
-            => $"{node}.pk = \"{Pk}\", {node}.fullName = \"{FullName}\", {node}.name = \"{Name}\"";
+        public virtual string Set(string node) => 
+            $"{node}.pk = \"{Pk}\", {node}.fullName = \"{FullName}\", {node}.name = \"{Name}\"";
+
+        public string ToInspection() =>
+            $$"""{ "Pk": {{Pk.Inspect()}}, "Label": {{Label.Inspect()}}, "FullName": {{FullName.Inspect()}}, "Name": {{Name.Inspect()}} }""";
     }
 
     // Code
