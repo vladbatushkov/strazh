@@ -23,9 +23,9 @@ namespace Strazh.Analysis
                 ? new AnalyzerManager(config.Solution)
                 : new AnalyzerManager();
 
-            var projectAnalyzers = config.IsSolutionBased
+            var projectAnalyzers = (config.IsSolutionBased
                 ? manager.Projects.Values
-                : config.Projects.Select(x => manager.GetProject(x));
+                : config.Projects.Select(x => manager.GetProject(x))).ToList();
 
             Console.WriteLine($"Analyzer ready to analyze {projectAnalyzers.Count()} project/s.");
 
