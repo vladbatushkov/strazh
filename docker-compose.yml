@@ -9,7 +9,7 @@ services:
     volumes:
       - C:\src\github\strazh\SystemUnderTest:/dest
     environment:
-      - c=neo4j:neo4j:strazh
+      - c=neo4j:neo4j:strazhpass
       - p=/dest/Strazh.Tests.ProjectB/Strazh.Tests.ProjectB.csproj /dest/Strazh.Tests.ProjectA/Strazh.Tests.ProjectA.csproj
     depends_on:
       - neo4j
@@ -22,7 +22,7 @@ services:
       - 7474:7474
       - 7687:7687
     environment:
-      NEO4J_AUTH: neo4j/strazh
+      NEO4J_AUTH: neo4j/strazhpass
       NEO4J_dbms_memory_pagecache_size: 1G
       NEO4J_dbms.memory.heap.initial_size: 1G
       NEO4J_dbms_memory_heap_max__size: 1G

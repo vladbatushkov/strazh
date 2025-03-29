@@ -1,6 +1,6 @@
 namespace Strazh.Domain
 {
-    public abstract class Triple
+    public abstract class Triple : IInspectable
     {
         public Node NodeA { get; set; }
 
@@ -17,6 +17,9 @@ namespace Strazh.Domain
 
         public override string ToString()
             => $"MERGE (a:{NodeA.Label} {{ pk: \"{NodeA.Pk}\" }}) ON CREATE SET {NodeA.Set("a")} ON MATCH SET {NodeA.Set("a")} MERGE (b:{NodeB.Label} {{ pk: \"{NodeB.Pk}\" }}) ON CREATE SET {NodeB.Set("b")} ON MATCH SET {NodeB.Set("b")} MERGE (a)-[:{Relationship.Type}]->(b);";
+
+        public string ToInspection() => 
+            $$"""{"NodeA": {{NodeA.Inspect()}}, "NodeB": {{NodeB.Inspect()}}, "Relationship": {{Relationship.Inspect()}} }""";
     }
 
     // Structure
@@ -42,6 +45,13 @@ namespace Strazh.Domain
     public class TripleIncludedIn : Triple
     {
         public TripleIncludedIn(
+            SolutionNode solution,
+            FolderNode folder)
+            : base(solution, folder, new IncludedInRelationship())
+        {
+        }
+
+        public TripleIncludedIn(
             ProjectNode contentA,
             FolderNode contentB)
             : base(contentA, contentB, new IncludedInRelationship())
@@ -58,6 +68,17 @@ namespace Strazh.Domain
             FolderNode contentB)
             : base(contentA, contentB, new IncludedInRelationship())
         { }
+
+    }
+    
+    public class TripleContains : Triple
+    {
+        public TripleContains(
+            SolutionNode solution,
+            ProjectNode project)
+            : base(solution, project, new ContainsRelationship())
+        {
+        }
     }
 
     public class TripleDeclaredAt : Triple
@@ -91,12 +112,6 @@ namespace Strazh.Domain
 
     public class TripleConstruct : Triple
     {
-        //public TripleConstruct(
-        //    ClassNode classA,
-        //    ClassNode classB)
-        //    : base(classA, classB, new ConstructRelationship())
-        //{ }
-
         public TripleConstruct(
             MethodNode methodA,
             ClassNode classB)

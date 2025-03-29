@@ -1,8 +1,10 @@
 namespace Strazh.Domain
 {
-    public abstract class Relationship
+    public abstract class Relationship : IInspectable
     {
         public abstract string Type { get; }
+        
+        public string ToInspection() => $$"""{ "Type": {{Type.Inspect()}} }""";
     }
 
     public class HaveRelationship : Relationship
@@ -38,5 +40,10 @@ namespace Strazh.Domain
     public class DependsOnRelationship : Relationship
     {
         public override string Type => "DEPENDS_ON";
+    }
+
+    public class ContainsRelationship : Relationship
+    {
+        public override string Type => "CONTAINS";
     }
 }

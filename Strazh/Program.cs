@@ -1,8 +1,9 @@
 ﻿using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.Threading.Tasks;
+using Microsoft.Build.Logging.StructuredLogger;
 using Strazh.Analysis;
+using Task = System.Threading.Tasks.Task;
 
 namespace Strazh
 {
@@ -44,7 +45,8 @@ namespace Strazh
             optionProjects.IsRequired = false;
             rootCommand.Add(optionProjects);
 
-            rootCommand.Handler = CommandHandler.Create<string, string, string, string, string[]>(BuildKnowledgeGraph);
+            rootCommand.SetHandler(BuildKnowledgeGraph, optionCredentials, optionMode, optionDelete, optionSolution, optionProjects);
+
             await rootCommand.InvokeAsync(args);
         }
 
